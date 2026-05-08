@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard RC AUTO — Simulatore Regressioni</title>
+<style>
+:root{
+  --bg:#F1F5F9; --surf:#fff; --surf2:#F8FAFC; --bdr:#E2E8F0; --bdr2:#CBD5E1;
+  --tx:#0F172A; --tx2:#475569; --tx3:#94A3B8;
+  --blue:#1D4ED8; --blue-lt:#DBEAFE; --blue-tx:#1E40AF;
+  --green:#059669; --red:#DC2626; --amber:#D97706; --amber-lt:#FEF3C7;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;
+  color:var(--tx);background:var(--bg);min-height:100vh}
+a{color:var(--blue)}
+
+.wrap{max-width:1260px;margin:0 auto;padding:24px 20px}
+
+/* NAV */
+.topbar{display:flex;align-items:center;gap:10px;padding-bottom:18px;margin-bottom:16px;border-bottom:1px solid var(--bdr)}
+.brand h1{font-size:20px;font-weight:700;letter-spacing:-.02em}
+.brand p{font-size:11px;color:var(--tx3);margin-top:3px}
+.spacer{flex:1}
+.tab{padding:7px 18px;border-radius:6px;border:1px solid var(--bdr);background:var(--surf);
+  color:var(--tx2);font-size:13px;font-weight:500;cursor:pointer;transition:.15s}
+.tab:hover{border-color:var(--blue);color:var(--blue)}
+.tab.on{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600}
+
+/* CALLOUT */
+.note{padding:10px 14px;border-radius:6px;font-size:12px;line-height:1.55;border-left:3px solid;margin-bottom:14px}
+.note.n{background:var(--surf);border-color:var(--bdr2);color:var(--tx2)}
+.note.i{background:var(--blue-lt);border-color:var(--blue);color:var(--blue-tx)}
+.note.w{background:var(--amber-lt);border-color:var(--amber);color:#78350F}
+.note strong{font-weight:600}
+
+/* KPI STRIP */
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:18px}
+.kpi{background:var(--surf);border:1px solid var(--bdr);border-radius:8px;padding:12px 14px}
+.kpi .v{font-size:19px;font-weight:700;line-height:1;margin-bottom:3px}
+.kpi .l{font-size:10px;color:var(--tx3);line-height:1.4}
+.kpi.blu .v{color:var(--blue)}
+.kpi.grn .v{color:var(--green)}
+.kpi.red .v{color:var(--red)}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+/* BLOCK */
+.blk{background:var(--surf);border:1px solid var(--bdr);border-radius:8px;padding:16px;margin-bottom:0}
+.blk-h-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.blk-h{font-size:15px;font-weight:600}
+.blk-d{font-size:12px;color:var(--tx2);line-height:1.55;margin-bottom:14px}
+.btn-reset{padding:4px 12px;border-radius:5px;border:1px solid var(--bdr2);background:var(--surf2);
+  color:var(--tx2);font-size:11px;cursor:pointer;transition:.15s;margin-left:auto;white-space:nowrap}
+.btn-reset:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-lt)}
+
+/* VARIABLE TOGGLES */
+.vt-wrap{margin-bottom:12px}
+.vt-lbl{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;font-weight:600}
+.vt-row{display:flex;flex-wrap:wrap;gap:6px}
+.vt-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;
+  border:1.5px solid var(--blue);background:var(--blue-lt);color:var(--blue-tx);
+  font-size:11px;font-weight:600;cursor:pointer;transition:.15s;user-select:none;line-height:1.4}
+.vt-chip::before{content:'●';font-size:7px;opacity:.8}
+.vt-chip:hover{opacity:.8}
+.vt-chip.off{border-color:var(--bdr2);background:var(--surf2);color:var(--tx3)}
+.vt-chip.off::before{content:'○'}
+.sl-row.dim{opacity:.32;pointer-events:none}
+.ov-panel.dim{opacity:.32;pointer-events:none}
+
+/* SLIDERS */
+.sl-row{margin-bottom:12px}
+.sl-head{display:flex;align-items:center;margin-bottom:5px}
+.sl-name{font-size:12px;color:var(--tx2);flex:1}
+.sl-val{font-size:12px;font-weight:700;color:var(--blue)}
+input[type=range]{width:100%;height:5px;appearance:none;background:var(--bdr);
+  border-radius:3px;cursor:pointer;outline:none;accent-color:var(--blue)}
+.sl-lim{display:flex;justify-content:space-between;margin-top:3px}
+.sl-lim span{font-size:10px;color:var(--tx3)}
+
+/* OUTPUT BOXES */
+.og{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.ob{background:var(--surf2);border:1px solid var(--bdr);border-radius:6px;padding:10px 12px}
+.ob .v{font-size:17px;font-weight:700}
+.ob .l{font-size:10px;color:var(--tx3);margin-top:2px}
+.ob.blu .v{color:var(--blue)}
+.ob.grn .v{color:var(--green)}
+.ob.red .v{color:var(--red)}
+
+/* TOGGLE */
+.tog-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.tog-lbl{font-size:12px;color:var(--tx2);flex:1}
+.sw{position:relative;width:40px;height:22px;flex-shrink:0}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw-t{position:absolute;inset:0;background:var(--bdr2);border-radius:11px;cursor:pointer;transition:.2s}
+.sw-t::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;
+  background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.sw input:checked+.sw-t{background:var(--blue)}
+.sw input:checked+.sw-t::before{transform:translateX(18px)}
+
+/* CHART */
+.ch-wrap{background:var(--surf);border:1px solid var(--bdr);border-radius:8px;padding:14px;margin-top:12px}
+.ch-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px}
+.ch-ttl{font-size:12px;font-weight:600;color:var(--tx2)}
+.legend{display:flex;gap:12px;flex-wrap:wrap}
+.li{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--tx2)}
+.ld{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.ll{width:22px;height:2px;flex-shrink:0}
+.ch-note{font-size:10px;color:var(--tx3);margin-top:7px;line-height:1.5}
+
+/* DIVIDER */
+hr.dv{border:none;border-top:1px solid var(--bdr);margin:16px 0}
+
+/* TABLES */
+.tw{overflow-x:auto;margin-bottom:0}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{text-align:left;padding:8px 10px;background:var(--surf2);color:var(--tx2);
+  font-weight:600;font-size:11px;border-bottom:1px solid var(--bdr);white-space:nowrap}
+tbody td{padding:8px 10px;border-bottom:1px solid var(--bdr);color:var(--tx);vertical-align:top}
+tbody tr:last-child td{border-bottom:none}
+tbody tr.wr{background:#FFFBEB}
+tbody tr.wr td{color:#78350F}
+.sec{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);margin-bottom:8px}
+
+/* MODEL TABS */
+.mtabs{display:flex;gap:8px;margin-bottom:18px}
+.mt{padding:7px 16px;border-radius:6px;border:1px solid var(--bdr);background:var(--surf);
+  color:var(--tx2);font-size:13px;cursor:pointer;transition:.15s}
+.mt:hover{background:var(--surf2)}
+.mt.on{background:var(--surf2);border-color:var(--bdr2);color:var(--tx);font-weight:600}
+
+/* PAGE */
+.page{display:none}.page.on{display:block}
+
+/* OVERRIDE PANEL */
+.ov-panel{background:var(--surf2);border:1px solid var(--bdr);border-radius:7px;padding:12px 14px;margin-bottom:12px}
+.ov-note{font-size:11px;color:var(--tx3);margin-top:5px}
+
+/* SCATTER NOTE */
+.sc-note{font-size:11px;color:var(--tx3);margin-top:8px;line-height:1.5}
+
+/* BADGE */
+.bdg{display:inline-block;padding:1px 7px;border-radius:20px;font-size:11px;font-weight:600}
+.bdg.ok{background:#DCFCE7;color:#166534}
+.bdg.wa{background:#FEF9C3;color:#854D0E}
+
+/* FOOTER */
+.footer{margin-top:28px;padding-top:14px;border-top:1px solid var(--bdr);
+  font-size:11px;color:var(--tx3);line-height:1.65}
+
+/* ADD-ON SECTION */
+.ao-sec{margin-bottom:22px}
+.ao-hdr{font-size:15px;font-weight:700;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid var(--bdr)}
+.ao-badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;vertical-align:middle}
+.ao-badge.best{background:#DCFCE7;color:#166534}
+.ao-badge.diag{background:#FEF9C3;color:#854D0E}
+.ao-badge.rec{background:#DBEAFE;color:#1e40af}
+.ao-warn{padding:7px 11px;background:var(--amber-lt);border-left:3px solid var(--amber);border-radius:4px;font-size:11px;color:#78350F;margin:5px 0;line-height:1.5}
+.ao-info{padding:7px 11px;background:var(--blue-lt);border-left:3px solid var(--blue);border-radius:4px;font-size:11px;color:var(--blue-tx);margin:5px 0;line-height:1.5}
+.ao-note{padding:7px 11px;background:var(--surf);border-left:3px solid var(--bdr2);border-radius:4px;font-size:11px;color:var(--tx2);margin:5px 0;line-height:1.5}
+.model-card{background:var(--surf);border:1px solid var(--bdr);border-radius:8px;padding:13px;margin-bottom:8px}
+.model-card.best-card{border-color:#059669;box-shadow:0 0 0 2px #D1FAE5}
+.model-card.diag-card{border-color:var(--amber);opacity:.9}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.g6{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.mini-stat{background:var(--surf2);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;text-align:center}
+.mini-stat .v{font-size:14px;font-weight:700;margin-bottom:2px}
+.mini-stat .l{font-size:10px;color:var(--tx3)}
+.apply-btn{padding:9px 22px;border-radius:6px;border:none;background:#059669;color:white;font-size:13px;font-weight:700;cursor:pointer;transition:.15s}
+.apply-btn:hover{opacity:.85}
+.apply-btn.applied{background:var(--blue)}
+.ao-formula{font-size:12px;font-family:'Courier New',monospace;background:var(--surf2);padding:10px 12px;border-radius:5px;line-height:1.7;border:1px solid var(--bdr)}
+
+/* RESPONSIVE */
+@media(max-width:960px){.kpi-row{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:1fr}.g3{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.kpi-row{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ══ TOP BAR ══════════════════════════════════════════════════ -->
+<div class="topbar">
+  <div class="brand">
+    <h1>Dashboard RC AUTO</h1>
+    <p>Simulatore regressioni Frequency &times; Premio &mdash; RC AUTO Italia 2015&ndash;2026</p>
+  </div>
+  <div class="spacer"></div>
+  <button class="tab on" id="btn-sim" onclick="gotoPage('sim')">&#9654; Simulatore RCA</button>
+  <button class="tab" id="btn-mod"   onclick="gotoPage('mod')">&#128200; Spiegazione modelli</button>
+  <button class="tab" id="btn-addon" onclick="gotoPage('addon')">&#128300; Add-on Modelli</button>
+</div>
+
+<div class="note n">
+  <strong>Fonte:</strong> "20260506_DB frequency premio_clean.xlsx" &mdash; RC AUTO Italia 2015&ndash;2026 (ISTAT, ANIA, IVASS).
+  Brent e Passeggeri-km 2026 non presenti nell'Excel: usare gli slider per simulare lo scenario.
+  PaxKm mancante per 2015, 2017 e 2025. Dettagli in &ldquo;Spiegazione modelli&rdquo;.
+</div>
+
+<!-- ══ PAGINA 1 — SIMULATORE ════════════════════════════════════ -->
+<div class="page on" id="page-sim">
+
+  <!-- KPI strip -->
+  <div class="kpi-row">
+    <div class="kpi blu"><div class="v" id="kpi-f">—</div><div class="l">Frequency prevista</div></div>
+    <div class="kpi blu"><div class="v" id="kpi-p">—</div><div class="l">Premio previsto</div></div>
+    <div class="kpi" id="kc-df"><div class="v" id="kpi-df">—</div><div class="l">&Delta; Frequency vs 2025</div></div>
+    <div class="kpi" id="kc-dp"><div class="v" id="kpi-dp">—</div><div class="l">&Delta; Premio vs 2025</div></div>
+    <div class="kpi"><div class="v" id="kpi-n1">—</div><div class="l">Osserv. Modello 1</div></div>
+    <div class="kpi"><div class="v" id="kpi-n2">—</div><div class="l">Osserv. Modello 2</div></div>
+  </div>
+
+  <div class="g2">
+
+    <!-- ── BLOCCO A ──────────────────────────────── -->
+    <div class="blk">
+      <div class="blk-h-row">
+        <div class="blk-h">Blocco A &mdash; Frequency RCA</div>
+        <button class="btn-reset" onclick="resetA()" title="Ripristina i valori predefiniti (ultimo dato disponibile)">&#8635; Reset</button>
+      </div>
+      <div class="blk-d">
+        La <strong>Frequency RCA</strong> (sinistrosità) misura il rapporto sinistri / veicoli assicurati.
+        Il modello suggerisce un'associazione con la mobilità e il prezzo Brent. Non implica causalità.
+      </div>
+
+      <div class="vt-wrap">
+        <div class="vt-lbl">Variabili nel modello</div>
+        <div class="vt-row">
+          <button class="vt-chip" id="vt-brent" onclick="toggleVar('brent')">Brent $/barrel</button>
+          <button class="vt-chip" id="vt-pax" onclick="toggleVar('pax')">Passeggeri-km</button>
+        </div>
+      </div>
+
+      <div class="sl-row" id="slr-brent">
+        <div class="sl-head"><span class="sl-name">Brent, $/barrel</span><span class="sl-val" id="sv-b">69 $/barrel</span></div>
+        <input type="range" id="sl-b" min="20" max="140" step="1" value="69" oninput="onSl()">
+        <div class="sl-lim"><span>20</span><span>140</span></div>
+      </div>
+      <div class="sl-row" id="slr-pax">
+        <div class="sl-head"><span class="sl-name">Passeggeri-km (mobilit&agrave;), mln</span><span class="sl-val" id="sv-px">950 mln</span></div>
+        <input type="range" id="sl-px" min="500" max="1400" step="5" value="950" oninput="onSl()">
+        <div class="sl-lim"><span>500</span><span>1,400</span></div>
+      </div>
+
+      <hr class="dv">
+      <div class="og">
+        <div class="ob blu"><div class="v" id="of">—</div><div class="l">Frequency prevista</div></div>
+        <div class="ob"><div class="v">4,32%</div><div class="l">Ultimo reale (2025)</div></div>
+      </div>
+      <div class="og">
+        <div class="ob" id="ob-dfa"><div class="v" id="dfa">—</div><div class="l">&Delta; assoluta (pp)</div></div>
+        <div class="ob" id="ob-dfp"><div class="v" id="dfp">—</div><div class="l">&Delta; percentuale</div></div>
+      </div>
+
+      <div class="ch-wrap">
+        <div class="ch-head">
+          <span class="ch-ttl">Frequency RCA &mdash; Storico e scenario 2026</span>
+          <div class="legend">
+            <div class="li"><div class="ld" style="background:#1D4ED8"></div>Reale</div>
+            <div class="li"><div class="ll" style="background:#94A3B8;border-top:2px dashed #94A3B8;height:0"></div>Modello</div>
+            <div class="li"><div class="ld" style="background:white;border:2.5px solid #D97706"></div>Scenario 2026</div>
+          </div>
+        </div>
+        <svg id="lc-f" width="100%" viewBox="0 0 600 230" style="overflow:visible;display:block"></svg>
+        <div class="ch-note">Linea blu = valori reali &nbsp;&#183;&nbsp; Linea grigia tratteggiata = stima del modello &nbsp;&#183;&nbsp; Cerchio arancio = scenario 2026 simulato con gli slider</div>
+      </div>
+    </div>
+
+    <!-- ── BLOCCO B ──────────────────────────────── -->
+    <div class="blk">
+      <div class="blk-h-row">
+        <div class="blk-h">Blocco B &mdash; Premio RC AUTO</div>
+        <button class="btn-reset" onclick="resetB()" title="Ripristina i valori predefiniti (ultimo dato disponibile)">&#8635; Reset</button>
+      </div>
+      <div class="blk-d">
+        Il <strong>Premio RC AUTO</strong> medio &egrave; stimato con Frequency, Severity e Inflazione.
+        Puoi usare la Frequency dal Modello&nbsp;1 o sovrascriverla manualmente.
+      </div>
+
+      <div class="vt-wrap">
+        <div class="vt-lbl">Variabili nel modello</div>
+        <div class="vt-row">
+          <button class="vt-chip" id="vt-freq" onclick="toggleVar('freq')">Frequency</button>
+          <button class="vt-chip" id="vt-sev" onclick="toggleVar('sev')">Severity</button>
+          <button class="vt-chip" id="vt-infl" onclick="toggleVar('infl')" title="Applica inflazione alla Severity per il 2026 (non è regressore diretto)">Infl → Severity</button>
+        </div>
+      </div>
+
+      <div class="ov-panel" id="slr-freq">
+        <div class="tog-row">
+          <span class="tog-lbl">Override manuale Frequency</span>
+          <label class="sw"><input type="checkbox" id="sw-ov" onchange="onSl()"><span class="sw-t"></span></label>
+        </div>
+        <div class="ov-note" id="ov-note">Frequency usata: dal Modello 1</div>
+        <div id="ov-sub" style="display:none;margin-top:10px">
+          <div class="sl-row" style="margin-bottom:0">
+            <div class="sl-head"><span class="sl-name">Frequency manuale, %</span><span class="sl-val" id="sv-mf">4,32%</span></div>
+            <input type="range" id="sl-mf" min="1" max="10" step="0.05" value="4.32" oninput="onSl()">
+            <div class="sl-lim"><span>1%</span><span>10%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sl-row" id="slr-sev">
+        <div class="sl-head"><span class="sl-name">Severity (Costo Medio Sinistro), &euro;</span><span class="sl-val" id="sv-sv">4,963 &euro;</span></div>
+        <input type="range" id="sl-sv" min="3000" max="8000" step="25" value="4963" oninput="onSl()">
+        <div class="sl-lim"><span>3,000</span><span>8,000</span></div>
+      </div>
+      <div class="sl-row" id="slr-infl">
+        <div class="sl-head"><span class="sl-name">Inflazione, %</span><span class="sl-val" id="sv-in">1.5%</span></div>
+        <input type="range" id="sl-in" min="-2" max="12" step="0.1" value="1.5" oninput="onSl()">
+        <div class="sl-lim"><span>-2%</span><span>12%</span></div>
+      </div>
+
+      <hr class="dv">
+      <div class="note n" style="font-size:10px;padding:5px 10px;margin-bottom:6px">
+        <strong>Modello base</strong> (Frequency + Severity + Inflazione)
+      </div>
+      <div class="og">
+        <div class="ob blu"><div class="v" id="op">—</div><div class="l">Premio previsto (base)</div></div>
+        <div class="ob"><div class="v">431.8 &euro;</div><div class="l">Ultimo reale (2025)</div></div>
+      </div>
+      <div class="og">
+        <div class="ob" id="ob-dpa"><div class="v" id="dpa">—</div><div class="l">&Delta; assoluta (&euro;)</div></div>
+        <div class="ob" id="ob-dpp"><div class="v" id="dpp">—</div><div class="l">&Delta; percentuale</div></div>
+      </div>
+
+      <!-- Add-on best model output (always shown, empty until computed) -->
+      <div id="ao-main-banner"></div>
+
+      <div class="ch-wrap">
+        <div class="ch-head">
+          <span class="ch-ttl">Premio RC AUTO &mdash; Storico e scenario 2026</span>
+          <div class="legend">
+            <div class="li"><div class="ld" style="background:#1D4ED8"></div>Reale</div>
+            <div class="li"><div class="ll" style="background:#94A3B8;border-top:2px dashed #94A3B8;height:0"></div>Base</div>
+            <div class="li"><div class="ld" style="background:#059669"></div>Add-on</div>
+            <div class="li"><div class="ld" style="background:white;border:2.5px solid #D97706"></div>Scenario 2026</div>
+          </div>
+        </div>
+        <svg id="lc-p" width="100%" viewBox="0 0 600 230" style="overflow:visible;display:block"></svg>
+        <div class="ch-note">Blu = reale &nbsp;&#183;&nbsp; Grigio = modello base &nbsp;&#183;&nbsp; Verde = modello add-on &nbsp;&#183;&nbsp; Cerchio arancio = scenario 2026</div>
+      </div>
+    </div>
+
+  </div><!-- g2 -->
+
+  <hr class="dv">
+  <div class="note n">
+    Le regressioni mostrano <strong>relazioni statistiche</strong> sui dati disponibili. Non dimostrano causalit&agrave;.
+    I risultati dipendono dalla qualit&agrave;, frequenza e completezza dei dati.
+    Le stime 2026 sono esplorative e non sostituiscono analisi attuariali complete.
+  </div>
+</div><!-- page-sim -->
+
+<!-- ══ PAGINA 2 — SPIEGAZIONE MODELLI ═══════════════════════════ -->
+<div class="page" id="page-mod">
+  <div class="mtabs">
+    <button class="mt on" id="btn-m1"  onclick="gotoMod('m1')">Modello 1 &mdash; Frequency</button>
+    <button class="mt"    id="btn-m2"  onclick="gotoMod('m2')">Modello 2 &mdash; Premio (base)</button>
+    <button class="mt"    id="btn-mao" onclick="gotoMod('mao')">Modello Add-on &mdash; Premio</button>
+  </div>
+
+  <!-- ── MODEL 1 ──────────────────────────────────────── -->
+  <div id="mc-m1">
+    <div style="margin-bottom:16px">
+      <div style="font-size:16px;font-weight:600;margin-bottom:6px">Modello 1 &mdash; Frequency RCA</div>
+      <p style="font-size:12px;color:var(--tx2);line-height:1.6;max-width:800px">
+        Regressione OLS sulla Frequency RCA (%) in funzione del <strong>Brent ($/barrel)</strong> e dei
+        <strong>Passeggeri-km (mln)</strong>. I Passeggeri-km misurano la mobilit&agrave; e l'esposizione al rischio stradale:
+        pi&ugrave; chilometri percorsi = pi&ugrave; opportunit&agrave; di sinistro. La relazione stimata &egrave; esplorativa.
+      </p>
+    </div>
+    <div id="w-m1" style="margin-bottom:10px"></div>
+    <div class="g2" style="margin-bottom:16px">
+      <div><div class="sec">Metriche del modello</div><div class="tw"><table id="tm1-met"></table></div></div>
+      <div><div class="sec">Coefficienti stimati</div><div class="tw"><table id="tm1-co"></table></div></div>
+    </div>
+    <hr class="dv">
+    <div class="sec">Qualit&agrave; dei dati</div>
+    <div class="tw" style="margin-bottom:16px"><table id="tm1-q"></table></div>
+    <hr class="dv">
+    <div class="sec">Predittori vs Frequency (scatter)</div>
+    <p style="font-size:11px;color:var(--tx3);margin-bottom:12px">
+      Ogni punto = un anno. Linea tratteggiata = relazione bivariata stimata (non dal modello completo).
+      Cerchio arancio = scenario 2026 simulato dagli slider.
+    </p>
+    <div class="g2" style="margin-bottom:16px">
+      <div class="ch-wrap" style="margin-top:0">
+        <div class="ch-ttl" style="margin-bottom:8px">Brent ($/barrel) vs Frequency (%)</div>
+        <svg id="sc-bf" width="100%" viewBox="0 0 360 240" style="overflow:visible;display:block"></svg>
+        <div class="sc-note" id="sn-bf"></div>
+      </div>
+      <div class="ch-wrap" style="margin-top:0">
+        <div class="ch-ttl" style="margin-bottom:8px">Passeggeri-km (mln) vs Frequency (%)</div>
+        <svg id="sc-pf" width="100%" viewBox="0 0 360 240" style="overflow:visible;display:block"></svg>
+        <div class="sc-note" id="sn-pf"></div>
+      </div>
+    </div>
+    <hr class="dv">
+    <div class="sec">Controllo multicollinearit&agrave;</div>
+    <div class="g2" style="margin-bottom:12px">
+      <div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:8px">Matrice di correlazione (predittori)</div>
+        <div class="tw"><table id="tm1-corr"></table></div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:5px">VIF (Variance Inflation Factor)</div>
+        <p style="font-size:11px;color:var(--tx3);margin-bottom:7px">VIF &gt; 5 = moderata &nbsp;&#183;&nbsp; VIF &gt; 10 = elevata</p>
+        <div class="tw"><table id="tm1-vif"></table></div>
+      </div>
+    </div>
+    <div id="mc-m1-msg"></div>
+  </div>
+
+  <!-- ── MODEL 2 ──────────────────────────────────────── -->
+  <div id="mc-m2" style="display:none">
+    <div style="margin-bottom:16px">
+      <div style="font-size:16px;font-weight:600;margin-bottom:6px">Modello 2 &mdash; Premio RC AUTO</div>
+      <p style="font-size:12px;color:var(--tx2);line-height:1.6;max-width:800px">
+        Regressione OLS sul Premio RC AUTO (&euro;) in funzione della <strong>Frequency reale osservata</strong> (2015&ndash;2025),
+        della <strong>Severity</strong> e dell'<strong>Inflazione</strong>.
+        In simulazione la Frequency reale &egrave; sostituita con quella stimata dal Modello&nbsp;1 (o con il valore manuale).
+      </p>
+    </div>
+    <div id="w-m2" style="margin-bottom:10px"></div>
+    <div class="g2" style="margin-bottom:16px">
+      <div><div class="sec">Metriche del modello</div><div class="tw"><table id="tm2-met"></table></div></div>
+      <div><div class="sec">Coefficienti stimati</div><div class="tw"><table id="tm2-co"></table></div></div>
+    </div>
+    <hr class="dv">
+    <div class="sec">Qualit&agrave; dei dati</div>
+    <div class="tw" style="margin-bottom:16px"><table id="tm2-q"></table></div>
+    <hr class="dv">
+    <div class="sec">Predittori vs Premio RC AUTO (scatter)</div>
+    <p style="font-size:11px;color:var(--tx3);margin-bottom:12px">
+      Ogni punto = un anno. Linea tratteggiata = relazione bivariata stimata. Cerchio arancio = scenario 2026.
+    </p>
+    <div class="g3" style="margin-bottom:16px">
+      <div class="ch-wrap" style="margin-top:0">
+        <div class="ch-ttl" style="margin-bottom:8px">Frequency (%) vs Premio (&euro;)</div>
+        <svg id="sc-fp" width="100%" viewBox="0 0 360 240" style="overflow:visible;display:block"></svg>
+        <div class="sc-note" id="sn-fp"></div>
+      </div>
+      <div class="ch-wrap" style="margin-top:0">
+        <div class="ch-ttl" style="margin-bottom:8px">Severity (&euro;) vs Premio (&euro;)</div>
+        <svg id="sc-sp" width="100%" viewBox="0 0 360 240" style="overflow:visible;display:block"></svg>
+        <div class="sc-note" id="sn-sp"></div>
+      </div>
+      <div class="ch-wrap" style="margin-top:0">
+        <div class="ch-ttl" style="margin-bottom:8px">Inflazione (%) vs Premio (&euro;)</div>
+        <svg id="sc-ip" width="100%" viewBox="0 0 360 240" style="overflow:visible;display:block"></svg>
+        <div class="sc-note" id="sn-ip"></div>
+      </div>
+    </div>
+    <hr class="dv">
+    <div class="sec">Controllo multicollinearit&agrave;</div>
+    <div class="g2" style="margin-bottom:12px">
+      <div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:8px">Matrice di correlazione</div>
+        <div class="tw"><table id="tm2-corr"></table></div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:5px">VIF</div>
+        <p style="font-size:11px;color:var(--tx3);margin-bottom:7px">VIF &gt; 5 = moderata &nbsp;&#183;&nbsp; VIF &gt; 10 = elevata</p>
+        <div class="tw"><table id="tm2-vif"></table></div>
+      </div>
+    </div>
+    <div id="mc-m2-msg"></div>
+    <div class="note n" style="margin-top:12px">
+      <strong>Catena di modelli:</strong> il Modello 2 &egrave; addestrato sulla Frequency reale (2015&ndash;2025, 11 obs).
+      In simulazione usa la Frequency stimata dal Modello 1, propagando l&rsquo;incertezza. Le stime sono esplorative.
+    </div>
+  </div>
+
+  <!-- ── MODELLO ADD-ON ─────────────────────────────────────────────────── -->
+  <div id="mc-mao" style="display:none">
+    <div id="mao-content">
+      <div class="note n" style="margin-bottom:12px">
+        Vai alla pagina <strong>Add-on Modelli</strong> per selezionare il modello migliore.
+        Una volta selezionato, torna qui per vedere la spiegazione completa.
+      </div>
+    </div>
+  </div>
+
+</div><!-- page-mod -->
+
+<!-- ══ PAGINA ADD-ON — SELEZIONE MODELLO MIGLIORE PREMIO RC AUTO ════ -->
+<div class="page" id="page-addon">
+
+  <div class="note i" style="margin-bottom:18px">
+    <strong>Add-on &mdash; Selezione modello migliore Premio RC AUTO</strong> &nbsp;&#8212;&nbsp;
+    Database: <strong>"20260506_DB FREQUENCY PREMIO CLEAN_V01"</strong>.
+    Frequency, Inflazione e EURIBOR sono in formato decimale (0.0539 = 5.39%).
+    Seleziona le variabili, confronta i modelli A&ndash;F e applica il migliore alla dashboard principale.
+  </div>
+
+  <!-- 1. Dataset -->
+  <div class="ao-sec">
+    <div class="ao-hdr">1. Dataset aggiornato &mdash; Variabili derivate</div>
+    <div class="tw"><table id="ao-data-tbl"></table></div>
+    <div class="ao-note" style="margin-top:6px">
+      <strong>LossCost</strong> = Freq &times; Sev &nbsp;|&nbsp;
+      <strong>Premio lag1</strong> = Premio anno precedente &nbsp;|&nbsp;
+      <strong>Trend</strong> = indice progressivo (1..11) &nbsp;|&nbsp;
+      <strong>PostCovidShock</strong> = 1 per 2021&ndash;2023, 0 altrove
+    </div>
+  </div>
+
+  <!-- 2. Variable toggles for custom model -->
+  <div class="ao-sec">
+    <div class="ao-hdr">2. Toggle variabili &mdash; Modello F (personalizzato)</div>
+    <div class="note n" style="font-size:11px;margin-bottom:10px">
+      Default raccomandato: <strong>LossCost + Premio lag1 + EURIBOR 3M</strong> (= Modello C).
+      I modelli predefiniti A&ndash;E ignorano questi toggle e usano le proprie variabili fisse.
+    </div>
+    <div id="ao-toggle-row" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
+    <div id="ao-custom-warn"></div>
+  </div>
+
+  <!-- 3. Simulation sliders -->
+  <div class="ao-sec">
+    <div class="ao-hdr">3. Scenario 2026 &mdash; Input simulazione</div>
+    <div class="g2" style="margin-bottom:14px">
+      <div>
+        <div class="sl-row"><div class="sl-head"><span class="sl-name">Frequency 2026 (decimale)</span><span class="sl-val" id="ao-sv-freq">4.325%</span></div>
+          <input type="range" id="ao-sl-freq" min="0.020" max="0.100" step="0.001" value="0.04325" oninput="aoUpdate()">
+          <div class="sl-lim"><span>2.0%</span><span>10.0%</span></div></div>
+        <div class="sl-row"><div class="sl-head"><span class="sl-name">Severity base 2026, &euro;</span><span class="sl-val" id="ao-sv-sev">4,963 &euro;</span></div>
+          <input type="range" id="ao-sl-sev" min="3000" max="8000" step="25" value="4962.789" oninput="aoUpdate()">
+          <div class="sl-lim"><span>3,000</span><span>8,000</span></div></div>
+        <div class="sl-row"><div class="sl-head"><span class="sl-name">Inflazione 2026 (decimale)</span><span class="sl-val" id="ao-sv-infl">1.5%</span></div>
+          <input type="range" id="ao-sl-infl" min="-0.02" max="0.15" step="0.005" value="0.015" oninput="aoUpdate()">
+          <div class="sl-lim"><span>&minus;2%</span><span>15%</span></div></div>
+      </div>
+      <div>
+        <div class="sl-row"><div class="sl-head"><span class="sl-name">EURIBOR 3M 2026 (decimale)</span><span class="sl-val" id="ao-sv-eur">2.03%</span></div>
+          <input type="range" id="ao-sl-eur" min="-0.01" max="0.06" step="0.001" value="0.02029" oninput="aoUpdate()">
+          <div class="sl-lim"><span>&minus;1%</span><span>6%</span></div></div>
+        <div class="sl-row"><div class="sl-head"><span class="sl-name">PostCovidShock 2026</span><span class="sl-val" id="ao-sv-pcs">0 (no)</span></div>
+          <input type="range" id="ao-sl-pcs" min="0" max="1" step="1" value="0" oninput="aoUpdate()">
+          <div class="sl-lim"><span>0 (no)</span><span>1 (s&igrave;)</span></div></div>
+      </div>
+    </div>
+    <div class="sec">Valori derivati calcolati</div>
+    <div class="g6" id="ao-computed-inputs" style="margin-bottom:8px"></div>
+    <div id="ao-input-warns"></div>
+  </div>
+
+  <!-- 4. Model comparison table -->
+  <div class="ao-sec">
+    <div class="ao-hdr">4. Confronto modelli A&ndash;E + F (personalizzato)</div>
+    <div class="note n" style="font-size:11px;margin-bottom:10px">
+      <strong>Modello E</strong>: solo diagnostico (inflazione diretta). &nbsp;|&nbsp;
+      <strong>Criterio selezione</strong>: R&sup2; adj massimo tra modelli non diagnostici. Clicca &ldquo;Usa&rdquo; per sovrascrivere la selezione automatica.
+    </div>
+    <div id="ao-model-cards"></div>
+  </div>
+
+  <!-- 5. Best model detail -->
+  <div class="ao-sec">
+    <div class="ao-hdr">5. Modello migliore &mdash; Dettaglio completo</div>
+    <div id="ao-best-display"></div>
+  </div>
+
+  <!-- 6. Charts -->
+  <div class="ao-sec">
+    <div class="ao-hdr">6. Grafici del modello migliore</div>
+    <div class="g2" style="margin-bottom:14px">
+      <div class="ch-wrap" style="margin-top:0">
+        <div class="ch-head">
+          <span class="ch-ttl">Premio osservato vs Premio stimato</span>
+          <div class="legend">
+            <div class="li"><div class="ld" style="background:#1D4ED8"></div>Osservato</div>
+            <div class="li"><div class="ld" style="background:#059669"></div>Stimato</div>
+          </div>
+        </div>
+        <svg id="ao-chart-fit" width="100%" viewBox="0 0 600 260" style="overflow:visible;display:block"></svg>
+      </div>
+      <div class="ch-wrap" style="margin-top:0">
+        <div class="ch-ttl" style="margin-bottom:8px">Residui (osservato &minus; stimato)</div>
+        <svg id="ao-chart-res" width="100%" viewBox="0 0 600 260" style="overflow:visible;display:block"></svg>
+        <div class="ch-note">Blu = residuo positivo (sotto-stima) &nbsp;&#183;&nbsp; Rosso = residuo negativo (sovra-stima)</div>
+      </div>
+    </div>
+    <div id="ao-scatter-row" class="g3"></div>
+  </div>
+
+  <!-- 7. Methodology note -->
+  <div class="ao-sec">
+    <div class="ao-note">
+      <strong>Nota metodologica:</strong>
+      Il modello consente di selezionare dinamicamente le variabili esplicative del premio. L'inflazione non viene usata di default come coefficiente diretto, perché nel campione storico può produrre un segno instabile e poco interpretabile. Viene invece applicata alla Severity attesa (Severity_2026_adj = Severity_2026 &times; (1 + inflazione)), assumendo che l'inflazione impatti prima il costo medio dei sinistri. L'EURIBOR 3M viene aggiunto come variabile macro-finanziaria opzionale per catturare il contesto dei tassi di interesse e il possibile effetto indiretto sulle politiche tariffarie.
+    </div>
+  </div>
+
+  <!-- 8. Apply to main dashboard -->
+  <div id="ao-apply-section"></div>
+
+</div><!-- page-addon -->
+
+<div class="footer">
+  Fonte dati: &ldquo;20260506_DB frequency premio_clean.xlsx&rdquo; &mdash; ISTAT, ANIA, IVASS Report IPER.
+  Le regressioni mostrano relazioni statistiche e non dimostrano causalit&agrave;. Stime esplorative &mdash; RC AUTO Italia 2015&ndash;2026.
+</div>
+
+</div><!-- wrap -->
+
+<script>
+'use strict';
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// DATASET  (same values, kept intact)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const DATA=[
+  {y:2015,infl:0.1, freq:5.39,sev:4096,    prem:439.1,brent:52, pax:null},
+  {y:2016,infl:-0.1,freq:5.57,sev:3986,    prem:419.7,brent:44, pax:1188},
+  {y:2017,infl:1.1, freq:5.43,sev:3975,    prem:416.9,brent:54, pax:null},
+  {y:2018,infl:1.1, freq:5.26,sev:4003,    prem:414.8,brent:71, pax:1115.4},
+  {y:2019,infl:0.5, freq:5.20,sev:4002,    prem:403.5,brent:64, pax:1185.8},
+  {y:2020,infl:-0.3,freq:3.68,sev:4415,    prem:379.0,brent:42, pax:713.8},
+  {y:2021,infl:1.9, freq:4.35,sev:4326,    prem:360.1,brent:71, pax:881.1},
+  {y:2022,infl:8.1, freq:4.59,sev:4483,    prem:362.7,brent:101,pax:1074.4},
+  {y:2023,infl:5.7, freq:4.48,sev:4461,    prem:391.0,brent:83, pax:1047},
+  {y:2024,infl:1.0, freq:4.46,sev:4713,    prem:417.0,brent:81, pax:950.3},
+  {y:2025,infl:1.5, freq:4.32,sev:4962.79, prem:431.8,brent:69, pax:null},
+  {y:2026,infl:1.5, freq:null, sev:null,    prem:null, brent:null,pax:null},
+];
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MATH
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const T=M=>M[0].map((_,j)=>M.map(r=>r[j]));
+const mmul=(A,B)=>{
+  const C=A.map(()=>new Array(B[0].length).fill(0));
+  for(let i=0;i<A.length;i++) for(let k=0;k<B.length;k++) for(let j=0;j<B[0].length;j++) C[i][j]+=A[i][k]*B[k][j];
+  return C;
+};
+const mvmul=(M,v)=>M.map(r=>r.reduce((s,x,j)=>s+x*v[j],0));
+const minv=M=>{
+  const n=M.length,a=M.map((r,i)=>[...r,...Array.from({length:n},(_,j)=>+(i===j))]);
+  for(let c=0;c<n;c++){
+    let p=c; for(let r=c+1;r<n;r++) if(Math.abs(a[r][c])>Math.abs(a[p][c])) p=r;
+    [a[c],a[p]]=[a[p],a[c]];
+    if(Math.abs(a[c][c])<1e-12) return null;
+    for(let r=0;r<n;r++){if(r===c)continue;const f=a[r][c]/a[c][c];for(let j=0;j<2*n;j++)a[r][j]-=f*a[c][j];}
+    const pv=a[c][c]; for(let j=0;j<2*n;j++) a[c][j]/=pv;
+  }
+  return a.map(r=>r.slice(n));
+};
+function ols(X0,y){
+  const n=X0.length,p=(X0[0]||[]).length;
+  if(n<p+2) return null;
+  const X=X0.map(r=>[1,...r]),Xt=T(X),iv=minv(mmul(Xt,X));
+  if(!iv) return null;
+  const b=mvmul(iv,mvmul(Xt,y));
+  const yh=X.map(r=>r.reduce((s,v,i)=>s+v*b[i],0));
+  const res=y.map((yi,i)=>yi-yh[i]);
+  const ym=y.reduce((a,c)=>a+c)/n,ss=y.reduce((s,yi)=>s+(yi-ym)**2,0),sse=res.reduce((s,r)=>s+r**2,0);
+  const r2=ss<1e-12?1:1-sse/ss;
+  return{b,yhat:yh,r2,r2a:1-(1-r2)*(n-1)/Math.max(n-p-1,1),
+    rmse:Math.sqrt(sse/n),mae:res.reduce((s,r)=>s+Math.abs(r),0)/n,n,p};
+}
+const pcorr=(x,y)=>{
+  const n=x.length,mx=x.reduce((a,b)=>a+b)/n,my=y.reduce((a,b)=>a+b)/n;
+  const num=x.reduce((s,xi,i)=>s+(xi-mx)*(y[i]-my),0);
+  const den=Math.sqrt(x.reduce((s,xi)=>s+(xi-mx)**2,0)*y.reduce((s,yi)=>s+(yi-my)**2,0));
+  return den<1e-10?0:num/den;
+};
+const corrMat=cols=>cols.map(ci=>cols.map(cj=>pcorr(ci,cj)));
+const calcVIF=X0=>X0[0].map((_,j)=>{
+  const y=X0.map(r=>r[j]),X=X0.map(r=>r.filter((_,i)=>i!==j));
+  if(!(X[0]||[]).length) return 1;
+  const res=ols(X,y); if(!res) return 999;
+  return 1/Math.max(1-Math.min(res.r2,0.9999),1e-4);
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ACTIVE VARIABLE STATE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const AV={brent:true,pax:true,freq:true,sev:true,infl:true};
+
+function toggleVar(name){
+  AV[name]=!AV[name];
+  document.getElementById('vt-'+name)?.classList.toggle('off',!AV[name]);
+  document.getElementById('slr-'+name)?.classList.toggle('dim',!AV[name]);
+  onSl();
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// DYNAMIC MODEL STATE  (recomputed on every change)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+let m1=null,m2=null,m1r=[],m2r=[],mc1=[],cr1=[],vf1=[1,1],mc2=[],cr2=[],vf2=[1,1,1];
+
+function computeModels(){
+  const uB=AV.brent,uP=AV.pax;
+  m1r=DATA.filter(d=>d.freq!=null&&(!uB||d.brent!=null)&&(!uP||d.pax!=null));
+  const X1=m1r.map(d=>{const r=[];if(uB)r.push(d.brent);if(uP)r.push(d.pax);return r;});
+  m1=m1r.length>0?ols(X1,m1r.map(d=>d.freq)):null;
+
+  if(uB&&uP&&m1r.length>2){
+    mc1=[m1r.map(d=>d.brent),m1r.map(d=>d.pax)];
+    cr1=corrMat(mc1);
+    vf1=m1r.length>3?calcVIF(m1r.map(d=>[d.brent,d.pax])):[1,1];
+  } else { mc1=[];cr1=[];vf1=[1,1]; }
+
+  // Inflazione è applicata via Severity per il 2026, NON come regressore diretto
+  const uF=AV.freq,uS=AV.sev;
+  m2r=DATA.filter(d=>d.prem!=null&&(!uF||d.freq!=null)&&(!uS||d.sev!=null));
+  const X2=m2r.map(d=>{const r=[];if(uF)r.push(d.freq);if(uS)r.push(d.sev);return r;});
+  m2=m2r.length>0?ols(X2,m2r.map(d=>d.prem)):null;
+
+  const nA2=[uF,uS].filter(Boolean).length;
+  if(nA2>1&&m2r.length>2){
+    const cols2=[];
+    if(uF)cols2.push(m2r.map(d=>d.freq));
+    if(uS)cols2.push(m2r.map(d=>d.sev));
+    mc2=cols2; cr2=corrMat(cols2);
+    const X2v=m2r.map(d=>{const r=[];if(uF)r.push(d.freq);if(uS)r.push(d.sev);return r;});
+    vf2=m2r.length>nA2+1?calcVIF(X2v):Array(nA2).fill(1);
+  } else { mc2=[];cr2=[];vf2=Array(Math.max(nA2,1)).fill(1); }
+}
+
+function calcPredF(brent,pax){
+  if(!m1) return null;
+  let bi=1,p=m1.b[0];
+  if(AV.brent){p+=m1.b[bi]*brent;bi++;}
+  if(AV.pax){p+=m1.b[bi]*pax;}
+  return p;
+}
+// Inflazione applicata via Severity (sev passata già aggiustata per il 2026)
+function calcPredP(effF,sev){
+  if(!m2) return null;
+  if(AV.freq&&effF==null) return null;
+  let bi=1,p=m2.b[0];
+  if(AV.freq){p+=m2.b[bi]*effF;bi++;}
+  if(AV.sev){p+=m2.b[bi]*sev;}
+  return p;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// FORMAT HELPERS  (en-US: dot decimal, comma thousands)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const f=(v,d=2,u='')=>v==null?'—':`${v.toFixed(d)}${u?' '+u:''}`;
+const fpm=(v,d=2,u='')=>`${v>=0?'+':''}${v.toFixed(d)}${u?' '+u:''}`;
+const fi=v=>v==null?'—':Math.round(v).toLocaleString('en-US');
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SVG ENGINE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const NS='http://www.w3.org/2000/svg';
+function el(tag,a={}){
+  const e=document.createElementNS(NS,tag);
+  for(const[k,v]of Object.entries(a)) e.setAttribute(k,v);
+  return e;
+}
+function txt(s,a={}){const e=el('text',a);e.textContent=s;return e;}
+function clr(id){const s=document.getElementById(id);if(s)while(s.firstChild)s.removeChild(s.firstChild);return s;}
+
+// ─── Line Chart ─────────────────────────────────
+function lineChart(id, cats, series){
+  const svg=clr(id); if(!svg) return;
+  const W=600,H=230,pl=52,pr=16,pt=18,pb=36,iW=W-pl-pr,iH=H-pt-pb,n=cats.length;
+  const allV=series.flatMap(s=>s.data.filter(v=>isFinite(v)));
+  if(!allV.length) return;
+  let mn=Math.min(...allV),mx=Math.max(...allV);
+  const pad=(mx-mn)*0.14||0.3; mn-=pad; mx+=pad;
+  const px=i=>pl+(i/(n-1))*iW, py=v=>pt+iH-((v-mn)/(mx-mn))*iH;
+
+  // Horizontal grid + Y axis labels
+  const yT=5;
+  for(let t=0;t<=yT;t++){
+    const yv=mn+(mx-mn)*t/yT,y=py(yv);
+    svg.appendChild(el('line',{x1:pl,y1:y,x2:pl+iW,y2:y,stroke:t===0?'#CBD5E1':'#E2E8F0',
+      'stroke-width':'1',...(t>0?{'stroke-dasharray':'4,3'}:{})}));
+    svg.appendChild(txt(yv.toFixed(series[0].dec??1),
+      {x:pl-7,y:y+4,'text-anchor':'end','font-size':'9',fill:'#94A3B8'}));
+  }
+  // Axes
+  svg.appendChild(el('line',{x1:pl,y1:pt,x2:pl,y2:pt+iH,stroke:'#CBD5E1','stroke-width':'1'}));
+  svg.appendChild(el('line',{x1:pl,y1:pt+iH,x2:pl+iW,y2:pt+iH,stroke:'#CBD5E1','stroke-width':'1'}));
+  // X labels
+  cats.forEach((c,i)=>{
+    if(i%2!==0&&i!==n-1) return;
+    svg.appendChild(txt(c,{x:px(i),y:pt+iH+15,'text-anchor':'middle','font-size':'9',fill:'#94A3B8'}));
+  });
+  // Y unit
+  if(series[0].unit) svg.appendChild(txt(series[0].unit,
+    {x:12,y:pt+iH/2,'text-anchor':'middle','font-size':'9',fill:'#94A3B8',
+      transform:`rotate(-90 12 ${pt+iH/2})`}));
+
+  // Series
+  series.forEach((s,si)=>{
+    const C=s.color||['#1D4ED8','#94A3B8','#D97706'][si]||'#64748B';
+    const dashy=s.dashed?'5,3':null;
+    let d='',last=-2;
+    s.data.forEach((v,i)=>{
+      if(!isFinite(v)) return;
+      d+=` ${i===last+1?'L':'M'}${px(i).toFixed(1)},${py(v).toFixed(1)}`;
+      last=i;
+    });
+    if(d) svg.appendChild(el('path',{d,fill:'none',stroke:C,'stroke-width':s.thin?'1.8':'2.2',
+      ...(dashy?{'stroke-dasharray':dashy}:{})}));
+    // Real-data dots (si===0)
+    if(si===0){
+      s.data.forEach((v,i)=>{
+        if(!isFinite(v)) return;
+        svg.appendChild(el('circle',{cx:px(i),cy:py(v),r:'4',fill:C}));
+      });
+    }
+    // Simulation circles — driven by s.simDot flag
+    if(s.simDot){
+      s.data.forEach((v,i)=>{
+        if(!isFinite(v)) return;
+        const lbl=s.simLabel||'2026';
+        const lblCol=s.simLabelColor||'#92400E';
+        svg.appendChild(el('circle',{cx:px(i),cy:py(v),r:'9',fill:'white',stroke:C,'stroke-width':'2.5'}));
+        svg.appendChild(el('circle',{cx:px(i),cy:py(v),r:'3.5',fill:C}));
+        svg.appendChild(txt(lbl,{x:px(i)+12,y:py(v)-7,'font-size':'9',fill:lblCol,'font-weight':'700'}));
+      });
+    }
+  });
+}
+
+// ─── Scatter Plot ────────────────────────────────
+function scatter(svgId,noteId,pts,sim,xLbl,yLbl){
+  const svg=clr(svgId); if(!svg) return;
+  const W=360,H=240,pl=54,pr=14,pt=16,pb=44,iW=W-pl-pr,iH=H-pt-pb;
+  if(!pts.length){
+    svg.appendChild(txt('Nessun dato',{x:W/2,y:H/2,'text-anchor':'middle','font-size':'11',fill:'#94A3B8'}));
+    return;
+  }
+  const ax=pts.map(p=>p.x).concat(sim&&isFinite(sim.x)?[sim.x]:[]);
+  const ay=pts.map(p=>p.y).concat(sim&&isFinite(sim.y)?[sim.y]:[]);
+  const xlo=Math.min(...ax),xhi=Math.max(...ax),ylo=Math.min(...ay),yhi=Math.max(...ay);
+  const xp=0.09*(xhi-xlo||1),yp=0.09*(yhi-ylo||1);
+  const [xl,xh,yl,yh]=[xlo-xp,xhi+xp,ylo-yp,yhi+yp];
+  const xr=xh-xl,yr=yh-yl;
+  const px=x=>pl+((x-xl)/xr)*iW, py=y=>pt+iH-((y-yl)/yr)*iH;
+
+  // Grid lines
+  [0,0.25,0.5,0.75,1].forEach(t=>{
+    svg.appendChild(el('line',{x1:pl,y1:py(yl+yr*t),x2:pl+iW,y2:py(yl+yr*t),
+      stroke:'#E2E8F0','stroke-width':'1','stroke-dasharray':'3,3'}));
+  });
+  svg.appendChild(el('line',{x1:pl,y1:pt,x2:pl,y2:pt+iH,stroke:'#CBD5E1','stroke-width':'1'}));
+  svg.appendChild(el('line',{x1:pl,y1:pt+iH,x2:pl+iW,y2:pt+iH,stroke:'#CBD5E1','stroke-width':'1'}));
+
+  // Axis ticks
+  [0,0.5,1].forEach(t=>{
+    const xv=xl+xr*t,yv=yl+yr*t;
+    svg.appendChild(txt(xv.toFixed(0),{x:px(xv),y:pt+iH+16,'text-anchor':'middle','font-size':'8',fill:'#94A3B8'}));
+    svg.appendChild(txt(yv.toFixed(0),{x:pl-6,y:py(yv)+3,'text-anchor':'end','font-size':'8',fill:'#94A3B8'}));
+  });
+
+  // Axis labels
+  svg.appendChild(txt(xLbl,{x:pl+iW/2,y:H-5,'text-anchor':'middle','font-size':'10',fill:'#475569'}));
+  svg.appendChild(txt(yLbl,{x:12,y:pt+iH/2,'text-anchor':'middle','font-size':'10',fill:'#475569',
+    transform:`rotate(-90 12 ${pt+iH/2})`}));
+
+  // Trend line (bivariate)
+  const fit=ols(pts.map(p=>[p.x]),pts.map(p=>p.y));
+  if(fit){
+    const fy=x=>fit.b[0]+fit.b[1]*x;
+    svg.appendChild(el('line',{x1:px(xl),y1:py(fy(xl)),x2:px(xh),y2:py(fy(xh)),
+      stroke:'#1D4ED8','stroke-width':'1.5','stroke-dasharray':'5,3',opacity:'0.5'}));
+  }
+
+  // Data points
+  pts.forEach(p=>{
+    svg.appendChild(el('circle',{cx:px(p.x).toFixed(1),cy:py(p.y).toFixed(1),r:'5',
+      fill:'#1D4ED8','fill-opacity':'0.55'}));
+    svg.appendChild(txt(p.lbl,{x:px(p.x)+6,y:py(p.y)-4,'font-size':'7.5',fill:'#94A3B8'}));
+  });
+
+  // Scenario point
+  if(sim&&isFinite(sim.x)&&isFinite(sim.y)){
+    svg.appendChild(el('circle',{cx:px(sim.x).toFixed(1),cy:py(sim.y).toFixed(1),r:'10',
+      fill:'white',stroke:'#D97706','stroke-width':'2.5'}));
+    svg.appendChild(el('circle',{cx:px(sim.x).toFixed(1),cy:py(sim.y).toFixed(1),r:'4',fill:'#D97706'}));
+    svg.appendChild(txt('2026',{x:px(sim.x)+13,y:py(sim.y)-6,'font-size':'9',
+      fill:'#92400E','font-weight':'700'}));
+  }
+
+  // Note: correlation
+  if(noteId){
+    const r=pcorr(pts.map(p=>p.x),pts.map(p=>p.y));
+    const str=Math.abs(r)>0.7?'associazione forte':Math.abs(r)>0.4?'associazione moderata':'associazione debole';
+    const el2=document.getElementById(noteId);
+    if(el2) el2.textContent=`r = ${r.toFixed(2)} — ${str}. La linea tratteggiata mostra la relazione bivariata stimata.`;
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TABLE BUILDER
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function bldTbl(id,hdrs,rows){
+  // rows: {c:[...cells], w?:bool}
+  const t=document.getElementById(id); if(!t) return;
+  let h='<thead><tr>'+hdrs.map(h=>`<th>${h}</th>`).join('')+'</tr></thead><tbody>';
+  rows.forEach(r=>{
+    const cells=Array.isArray(r)?r:r.c;
+    const warn=!Array.isArray(r)&&r.w;
+    h+=`<tr${warn?' class="wr"':''}>`;
+    cells.forEach(c=>h+=`<td>${c}</td>`);
+    h+='</tr>';
+  });
+  h+='</tbody>';
+  t.innerHTML=h;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// BUILD EXPLANATION TABLES  (dynamic — uses current global model state)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function buildExpl(){
+  const miss=k=>DATA.filter(d=>d[k]===null).length;
+  const sgn=(v,pos,neg)=>v>=0
+    ?`<span style="color:var(--red)">+</span>&nbsp;${pos}`
+    :`<span style="color:var(--green)">−</span>&nbsp;${neg}`;
+  const noData=ids=>ids.forEach(id=>{const t=document.getElementById(id);if(t)t.innerHTML='';});
+
+  // ── M1 ───────────────────────────────────────
+  if(!m1){
+    document.getElementById('w-m1').innerHTML='<div class="note w">Dati insufficienti con le variabili attive. Attiva almeno un predittore.</div>';
+    noData(['tm1-met','tm1-co','tm1-q','tm1-corr','tm1-vif']);
+    document.getElementById('mc-m1-msg').innerHTML='';
+  } else {
+    const actA=[AV.brent?'Brent':null,AV.pax?'Passeggeri-km':null].filter(Boolean).join(', ')||'—';
+    bldTbl('tm1-met',['Metrica','Valore'],[
+      ['Periodo coperto',`${m1r[0].y}–${m1r.at(-1).y}`],
+      ['Osservazioni usate',m1.n],
+      ['Variabile dipendente','Frequency, %'],
+      ['Variabili attive',actA],
+      ['R²',m1.r2.toFixed(4)],
+      ['R² aggiustato',m1.r2a.toFixed(4)],
+      ['RMSE',m1.rmse.toFixed(3)+' pp'],
+      ['MAE',m1.mae.toFixed(3)+' pp'],
+    ].map(r=>({c:r})));
+
+    const rows1=[{c:['Intercetta',m1.b[0].toFixed(4),'—']}];
+    let ci=1;
+    if(AV.brent){rows1.push({c:['Brent ($/barrel)',m1.b[ci].toFixed(5),sgn(m1.b[ci],'Brent↑ → Frequency↑','Brent↑ → Frequency↓')]});ci++;}
+    if(AV.pax)  {rows1.push({c:['Passeggeri-km (mln)',m1.b[ci].toFixed(6),sgn(m1.b[ci],'Mobilità↑ → sinistrosità↑','Mobilità↑ → sinistrosità↓')]});}
+    bldTbl('tm1-co',['Variabile','Coeff.','Interpretazione'],rows1);
+
+    bldTbl('tm1-q',['Variabile','Valori mancanti','Note'],[
+      {c:['Brent, $/barrel'+(AV.brent?'':' ✗ off'),miss('brent'),'Predittore'], w:miss('brent')>0},
+      {c:['Passeggeri-km, mln'+(AV.pax?'':' ✗ off'),miss('pax'),'mancante 2015, 2017, 2025'], w:miss('pax')>0},
+      {c:['Frequency, %',miss('freq'),'Variabile dipendente'], w:miss('freq')>0},
+    ]);
+
+    document.getElementById('w-m1').innerHTML=m1.n<10
+      ?`<div class="note w">Campione ridotto (${m1.n} osservazioni). Coefficienti da interpretare con cautela.</div>`:'';
+
+    if(AV.brent&&AV.pax&&cr1.length>1){
+      const cn1=['Brent','Passeggeri-km'];
+      bldTbl('tm1-corr',['',...cn1],cn1.map((r,i)=>({c:[r,...cn1.map((c,j)=>{
+        const v=cr1[i][j].toFixed(2);
+        return i===j?v:Math.abs(cr1[i][j])>0.7?`<strong style="color:var(--red)">${v}</strong>`:v;
+      })]})));
+      bldTbl('tm1-vif',['Variabile','VIF','Giudizio'],[
+        {c:['Brent',(vf1[0]??1).toFixed(2),(vf1[0]??1)>5?'<span class="bdg wa">Attenzione</span>':'<span class="bdg ok">Ok</span>'],w:(vf1[0]??1)>5},
+        {c:['Passeggeri-km',(vf1[1]??1).toFixed(2),(vf1[1]??1)>5?'<span class="bdg wa">Attenzione</span>':'<span class="bdg ok">Ok</span>'],w:(vf1[1]??1)>5},
+      ]);
+      const r01=cr1[0][1];
+      document.getElementById('mc-m1-msg').innerHTML=Math.abs(r01)>0.7
+        ?`<div class="note w">Attenzione: Brent e Passeggeri-km sono correlati (r = ${r01.toFixed(2)}). I coefficienti possono essere meno stabili.</div>`
+        :`<div class="note n">Non emergono segnali forti di multicollinearità tra Brent e Passeggeri-km (r = ${r01.toFixed(2)}).</div>`;
+    } else {
+      const t=document.getElementById('tm1-corr');if(t)t.innerHTML='<tbody><tr><td style="color:var(--tx3);font-size:11px">Meno di 2 variabili attive — analisi non disponibile.</td></tr></tbody>';
+      const v=document.getElementById('tm1-vif');if(v)v.innerHTML='<tbody><tr><td>—</td></tr></tbody>';
+      document.getElementById('mc-m1-msg').innerHTML='';
+    }
+  }
+
+  // ── M2 ───────────────────────────────────────
+  if(!m2){
+    document.getElementById('w-m2').innerHTML='<div class="note w">Dati insufficienti con le variabili attive. Attiva almeno un predittore.</div>';
+    noData(['tm2-met','tm2-co','tm2-q','tm2-corr','tm2-vif']);
+    document.getElementById('mc-m2-msg').innerHTML='';
+    return;
+  }
+  const actB=[AV.freq?'Frequency':null,AV.sev?'Severity':null].filter(Boolean).join(', ')||'—';
+  const inflNote=AV.infl?'Inflazione applicata via Severity per 2026':'Inflazione non applicata';
+  bldTbl('tm2-met',['Metrica','Valore'],[
+    ['Periodo coperto',`${m2r[0].y}–${m2r.at(-1).y}`],
+    ['Osservazioni usate',m2.n],
+    ['Variabile dipendente','Premio RC AUTO, €'],
+    ['Regressori',actB],
+    ['Inflazione',inflNote],
+    ['R²',m2.r2.toFixed(4)],
+    ['R² aggiustato',m2.r2a.toFixed(4)],
+    ['RMSE',m2.rmse.toFixed(1)+' €'],
+    ['MAE',m2.mae.toFixed(1)+' €'],
+  ].map(r=>({c:r})));
+
+  const rows2=[{c:['Intercetta',m2.b[0].toFixed(2),'—']}];
+  let ci2=1;
+  if(AV.freq){rows2.push({c:['Frequency (%)',m2.b[ci2].toFixed(3),sgn(m2.b[ci2],'Sinistrosità↑ → premio↑','Sinistrosità↑ → premio↓')]});ci2++;}
+  if(AV.sev) {rows2.push({c:['Severity (€)',m2.b[ci2].toFixed(4),sgn(m2.b[ci2],'Costo sinistro↑ → premio↑','Costo sinistro↑ → premio↓')]});}
+  rows2.push({c:['Inflazione','— (via Severity)','Infl↑ → Sev_adj↑ → Premio↑']});
+  bldTbl('tm2-co',['Variabile','Coeff.','Interpretazione'],rows2);
+
+  bldTbl('tm2-q',['Variabile','Valori mancanti','Note'],[
+    {c:['Frequency, %'+(AV.freq?'':' ✗ off'),miss('freq'),'Regressore'], w:miss('freq')>0},
+    {c:['Severity, €'+(AV.sev?'':' ✗ off'),miss('sev'),'Regressore'], w:miss('sev')>0},
+    {c:['Inflazione, %',miss('infl'),'Via Severity (non regressore)']},
+    {c:['Premio RC AUTO, €',miss('prem'),'Variabile dipendente'], w:miss('prem')>0},
+  ]);
+
+  document.getElementById('w-m2').innerHTML=m2.n<10
+    ?`<div class="note w">Campione ridotto (${m2.n} osservazioni). Coefficienti da interpretare con cautela.</div>`:'';
+
+  const cn2=[AV.freq?'Frequency':null,AV.sev?'Severity':null].filter(Boolean);
+  if(cn2.length>1&&cr2.length>1){
+    bldTbl('tm2-corr',['',...cn2],cn2.map((r,i)=>({c:[r,...cn2.map((c,j)=>{
+      const v=cr2[i][j].toFixed(2);
+      return i===j?v:Math.abs(cr2[i][j])>0.7?`<strong style="color:var(--red)">${v}</strong>`:v;
+    })]})));
+    bldTbl('tm2-vif',['Variabile','VIF','Giudizio'],cn2.map((n,i)=>({
+      c:[n,(vf2[i]??1).toFixed(2),(vf2[i]??1)>5?'<span class="bdg wa">Attenzione</span>':'<span class="bdg ok">Ok</span>'],
+      w:(vf2[i]??1)>5
+    })));
+    const hi=[];
+    for(let i=0;i<cn2.length;i++) for(let j=i+1;j<cn2.length;j++)
+      if(Math.abs(cr2[i][j])>0.7) hi.push(`${cn2[i]}–${cn2[j]} (r = ${cr2[i][j].toFixed(2)})`);
+    document.getElementById('mc-m2-msg').innerHTML=hi.length>0
+      ?hi.map(p=>`<div class="note w">Attenzione: ${p} correlate. I coefficienti possono essere meno stabili.</div>`).join('')
+      :`<div class="note n">Non emergono segnali forti di multicollinearità tra le variabili attive del Modello 2.</div>`;
+  } else {
+    const t=document.getElementById('tm2-corr');if(t)t.innerHTML='<tbody><tr><td style="color:var(--tx3);font-size:11px">Meno di 2 variabili attive — analisi non disponibile.</td></tr></tbody>';
+    const v=document.getElementById('tm2-vif');if(v)v.innerHTML='<tbody><tr><td>—</td></tr></tbody>';
+    document.getElementById('mc-m2-msg').innerHTML='';
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MAIN UPDATE  (called on every slider change or toggle)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function onSl(){
+  computeModels();
+
+  const brent=+document.getElementById('sl-b').value;
+  const pax  =+document.getElementById('sl-px').value;
+  const sev  =+document.getElementById('sl-sv').value;
+  const infl =+document.getElementById('sl-in').value;
+  const manual=document.getElementById('sw-ov').checked;
+  const mf   =+document.getElementById('sl-mf').value;
+
+  document.getElementById('sv-b').textContent=`${brent} $/barrel`;
+  document.getElementById('sv-px').textContent=`${pax.toLocaleString('en-US')} mln`;
+  document.getElementById('sv-sv').textContent=`${fi(sev)} €`;
+  document.getElementById('sv-in').textContent=`${infl.toFixed(1)}%`;
+  document.getElementById('sv-mf').textContent=`${mf.toFixed(2)}%`;
+
+  document.getElementById('ov-sub').style.display=manual?'block':'none';
+
+  const predF=calcPredF(brent,pax);
+  const effF=manual?mf:predF;
+  // Inflazione aggiusta Severity (non è regressore diretto)
+  const sev2026 = AV.infl ? sev*(1+infl/100) : sev;
+  const predP=calcPredP(effF,sev2026);
+
+  document.getElementById('ov-note').textContent=manual
+    ?`Frequency manuale: ${mf.toFixed(2)}%`
+    :`Frequency usata: ${predF!=null?predF.toFixed(2)+'%':' — '} (dal Modello 1)`;
+
+  const lastF=4.32, lastP=431.8;
+  const dF=predF!=null?predF-lastF:null;
+  const dP=predP!=null?predP-lastP:null;
+
+  set('kpi-f', predF!=null?predF.toFixed(2)+'%':'—');
+  set('kpi-p', predP!=null?Math.round(predP).toLocaleString('en-US')+' €':'—');
+  setDelta('kpi-df','kc-df',dF,2,'pp');
+  setDelta('kpi-dp','kc-dp',dP,0,'€');
+  set('kpi-n1',m1?m1.n:'—');
+  set('kpi-n2',m2?m2.n:'—');
+
+  set('of', predF!=null?predF.toFixed(2)+'%':'—');
+  set('op', predP!=null?Math.round(predP).toLocaleString('en-US')+' €':'—');
+  setObDelta('dfa','ob-dfa',dF,2,'pp');
+  setObDelta('dfp','ob-dfp',dF!=null&&lastF?dF/lastF*100:null,1,'%');
+  setObDelta('dpa','ob-dpa',dP,0,'€');
+  setObDelta('dpp','ob-dpp',dP!=null&&lastP?dP/lastP*100:null,1,'%');
+
+  // ── Compute add-on prediction from main sliders (decimal conversion) ──────
+  const best        = aoSelectedModel;
+  const _mainFreqD  = effF!=null ? effF/100 : 0.04325;
+  const _mainSevAdj = sev*(1+infl/100);
+  const _mainLc     = _mainFreqD*_mainSevAdj;
+  const _mainEur    = +(document.getElementById('ao-sl-eur')?.value??0.02029);
+  const _mainPcs    = +(document.getElementById('ao-sl-pcs')?.value??0);
+  const _mainSim    = {freq:_mainFreqD,sev:_mainSevAdj,lc:_mainLc,lag1:431.8,
+                       tr:12,pcs:_mainPcs,eur:_mainEur,inflD:infl/100};
+  const pred26ao    = best&&best.model ? aoPredict(best.model,_mainSim) : null;
+
+  // ── Add-on model banner ───────────────────────────────────────────────────
+  const banner=document.getElementById('ao-main-banner');
+  if(banner){
+    if(best&&best.model){
+      const aoPred26=pred26ao;
+      const dPAo=aoPred26!==null&&lastP?aoPred26-lastP:null;
+      banner.innerHTML=`
+      <hr class="dv" style="margin:10px 0">
+      <div class="note n" style="font-size:10px;padding:5px 10px;margin-bottom:6px">
+        <strong>Modello selezionato dall&rsquo;Add-on</strong>: ${best.n||best.name}
+        &nbsp;<a href="javascript:void(0)" onclick="gotoPage('addon')" style="font-size:10px;color:var(--blue)">[Modifica in Add-on]</a>
+      </div>
+      <div class="og">
+        <div class="ob" style="border-color:#059669">
+          <div class="v" style="color:#059669">${aoPred26!==null?Math.round(aoPred26).toLocaleString('en-US')+' €':'—'}</div>
+          <div class="l">Premio 2026 (add-on)</div>
+        </div>
+        <div class="ob"><div class="v">431.8 &euro;</div><div class="l">Ultimo reale (2025)</div></div>
+        ${dPAo!==null?`
+        <div class="ob">
+          <div class="v" style="color:${dPAo>=0?'var(--red)':'var(--green)'}">${dPAo>=0?'+':''}${Math.round(dPAo).toLocaleString('en-US')} &euro;</div>
+          <div class="l">&Delta; add-on vs 2025</div>
+        </div>`:''}
+      </div>
+      <div class="ao-note" style="margin:4px 0 8px">
+        Variabili: <strong>${best.model.varKeys.map(k=>aoVL(k)).join(' + ')}</strong>
+        &nbsp;|&nbsp; R&sup2; adj: <strong>${best.model.r2a.toFixed(4)}</strong>
+        &nbsp;|&nbsp; N: <strong>${best.model.n}</strong>
+      </div>`;
+    } else {
+      banner.innerHTML=`<div class="ao-note" style="margin-top:8px">
+        Vai alla pagina <a href="javascript:void(0)" onclick="gotoPage('addon')" style="color:var(--blue)">Add-on Modelli</a>
+        per selezionare il modello migliore del Premio RC AUTO.
+      </div>`;
+    }
+  }
+
+  const cats=DATA.map(d=>String(d.y));
+  const fReal=DATA.map(d=>d.freq??NaN);
+  const fMod=DATA.map(d=>{
+    if(!m1) return NaN;
+    if(AV.brent&&d.brent==null) return NaN;
+    if(AV.pax&&d.pax==null) return NaN;
+    return calcPredF(d.brent??brent,d.pax??pax)??NaN;
+  });
+  const fSim=DATA.map((_,i)=>i===DATA.length-1&&predF!=null?predF:NaN);
+  lineChart('lc-f',cats,[
+    {data:fReal, dec:2, unit:'Freq %'},
+    {data:fMod,  dec:2, dashed:true, thin:true},
+    {data:fSim,  dec:2, color:'#D97706', simDot:true},
+  ]);
+
+  const pReal=DATA.map(d=>d.prem??NaN);
+  const pMod=DATA.map(d=>{
+    if(!m2) return NaN;
+    if(AV.freq&&d.freq==null) return NaN;
+    if(AV.sev&&d.sev==null) return NaN;
+    // Storico: usa sev reale (già incorpora inflazione passata); nessun aggiustamento
+    return calcPredP(d.freq??effF,d.sev??sev)??NaN;
+  });
+  const pSim=DATA.map((_,i)=>i===DATA.length-1&&predP!=null?predP:NaN);
+
+  // Add-on model historical fit (best + _mainSim already defined above)
+  const pModAo=DATA.map(d=>{
+    if(!best||!best.model) return NaN;
+    const aoRow=AO_DATA.find(r=>r.y===d.y);
+    if(!aoRow) return NaN;
+    if(best.model.varKeys.some(k=>aoGV(aoRow,k)===null)) return NaN;
+    const hs={freq:aoRow.freq??0,sev:aoRow.sev??0,lc:aoRow.lc??0,lag1:aoRow.lag1??0,
+               tr:aoRow.tr,pcs:aoRow.pcs,eur:aoRow.eur,inflD:aoRow.infl};
+    return aoPredict(best.model,hs)??NaN;
+  });
+  const pSimAo=DATA.map((_,i)=>i===DATA.length-1&&pred26ao!=null?pred26ao:NaN);
+
+  lineChart('lc-p',cats,[
+    {data:pReal,  dec:0, unit:'Premio €'},
+    {data:pMod,   dec:0, dashed:true, thin:true},
+    {data:pSim,   dec:0, color:'#D97706', simDot:true},
+    {data:pModAo, dec:0, color:'#059669'},
+    {data:pSimAo, dec:0, color:'#059669', simDot:true, simLabel:'add-on', simLabelColor:'#059669'},
+  ]);
+
+  const onMod=document.getElementById('page-mod').classList.contains('on');
+  if(onMod){ buildExpl(); drawScatters(predF,predP,effF,sev,infl); }
+}
+
+function drawScatters(predF,predP,effF,sev,infl){
+  const brent=+document.getElementById('sl-b').value;
+  const pax  =+document.getElementById('sl-px').value;
+  const noMod=id=>{const s=clr(id);if(s)s.appendChild(txt('Modello non disponibile',{x:180,y:120,'text-anchor':'middle','font-size':'11',fill:'#94A3B8'}));};
+  if(!m1){['sc-bf','sc-pf'].forEach(noMod);}
+  else{
+    scatter('sc-bf','sn-bf',
+      m1r.filter(d=>d.brent!=null).map(d=>({x:d.brent,y:d.freq,lbl:String(d.y)})),
+      AV.brent&&predF!=null?{x:brent,y:predF}:null,
+      'Brent ($/barrel)','Frequency (%)');
+    scatter('sc-pf','sn-pf',
+      m1r.filter(d=>d.pax!=null).map(d=>({x:d.pax,y:d.freq,lbl:String(d.y)})),
+      AV.pax&&predF!=null?{x:pax,y:predF}:null,
+      'Passeggeri-km (mln)','Frequency (%)');
+  }
+  if(!m2){['sc-fp','sc-sp'].forEach(noMod); clr('sc-ip'); return;}
+  scatter('sc-fp','sn-fp',
+    m2r.filter(d=>d.freq!=null).map(d=>({x:d.freq,y:d.prem,lbl:String(d.y)})),
+    AV.freq&&effF!=null&&predP!=null?{x:effF,y:predP}:null,
+    'Frequency (%)','Premio (€)');
+  // Severity scatter: storico usa sev reale; punto 2026 usa sev aggiustata per inflazione
+  scatter('sc-sp','sn-sp',
+    m2r.filter(d=>d.sev!=null).map(d=>({x:d.sev,y:d.prem,lbl:String(d.y)})),
+    AV.sev&&predP!=null?{x:sev2026,y:predP}:null,
+    'Severity adj 2026 (€)','Premio (€)');
+  // Inflazione: scatter informativo (non è regressore)
+  const scIp=clr('sc-ip');
+  if(scIp){
+    const pts=DATA.filter(d=>d.infl!=null&&d.prem!=null).map(d=>({x:d.infl,y:d.prem,lbl:String(d.y)}));
+    scatter('sc-ip','sn-ip',pts,null,'Inflazione (%)','Premio (€) — solo informativo');
+    const sn=document.getElementById('sn-ip');
+    if(sn) sn.textContent='Inflazione non è regressore del modello. Agisce sulla Severity per il 2026.';
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// UI HELPERS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function set(id,v){const e=document.getElementById(id);if(e)e.innerHTML=v;}
+function setDelta(valId,cardId,v,d,u){
+  const card=document.getElementById(cardId);
+  if(!card) return;
+  card.className='kpi'+(v==null?'':v>=0?' red':' grn');
+  set(valId,v!=null?fpm(v,d,u):'—');
+}
+function setObDelta(valId,boxId,v,d,u){
+  const box=document.getElementById(boxId);
+  if(!box) return;
+  box.className='ob'+(v==null?'':v>=0?' red':' grn');
+  set(valId,v!=null?fpm(v,d,u):'—');
+}
+function _currentPreds(){
+  const brent=+document.getElementById('sl-b').value;
+  const pax  =+document.getElementById('sl-px').value;
+  const sev  =+document.getElementById('sl-sv').value;
+  const infl =+document.getElementById('sl-in').value;
+  const manual=document.getElementById('sw-ov').checked;
+  const mf   =+document.getElementById('sl-mf').value;
+  const predF=calcPredF(brent,pax);
+  const effF=manual?mf:predF;
+  const _sev2026=AV.infl?sev*(1+infl/100):sev;
+  return {predF,predP:calcPredP(effF,_sev2026),effF,sev,infl,sev2026:_sev2026};
+}
+function gotoPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.getElementById('page-'+id).classList.add('on');
+  document.querySelectorAll('#btn-sim,#btn-mod,#btn-addon').forEach(b=>b.classList.remove('on'));
+  document.getElementById('btn-'+id).classList.add('on');
+  if(id==='mod'){
+    buildExpl();
+    const {predF,predP,effF,sev,infl}=_currentPreds();
+    drawScatters(predF,predP,effF,sev,infl);
+  }
+  if(id==='addon') aoUpdate();
+}
+function gotoMod(id){
+  document.getElementById('mc-m1').style.display=id==='m1'?'block':'none';
+  document.getElementById('mc-m2').style.display=id==='m2'?'block':'none';
+  document.getElementById('mc-mao').style.display=id==='mao'?'block':'none';
+  document.querySelectorAll('#btn-m1,#btn-m2,#btn-mao').forEach(b=>b.classList.remove('on'));
+  document.getElementById('btn-'+id).classList.add('on');
+  if(id==='mao'){buildMao(); return;}
+  buildExpl();
+  const {predF,predP,effF,sev,infl}=_currentPreds();
+  drawScatters(predF,predP,effF,sev,infl);
+}
+
+function buildMao(){
+  const div=document.getElementById('mao-content'); if(!div) return;
+  const best=aoSelectedModel;
+  if(!best||!best.model){
+    div.innerHTML=`<div class="note n">Vai alla pagina <a href="javascript:void(0)" onclick="gotoPage('addon')" style="color:var(--blue)">Add-on Modelli</a> per selezionare il modello migliore.</div>`;
+    return;
+  }
+  const m=best.model, sim=best.sim;
+  const pred26=aoPredict(m,sim);
+  const dPAo=pred26!==null?pred26-431.8:null;
+  let formulaHtml=`Premio = ${m.b[0].toFixed(2)}`;
+  m.varKeys.forEach((k,i)=>{formulaHtml+=` ${m.b[i+1]>=0?' + ':' &minus; '}${Math.abs(m.b[i+1]).toFixed(4)} &times; ${aoVL(k)}`;});
+  const interp={
+    lc:   '<strong>LossCost</strong> = Frequency &times; Severity. Sintetizza il costo tecnico atteso per polizza.',
+    lag1: '<strong>Premio lag1</strong>: inerzia tariffaria. I premi si aggiornano gradualmente anno su anno.',
+    eur:  '<strong>EURIBOR 3M</strong>: proxy del contesto macro-finanziario e dei tassi di interesse.',
+    freq: '<strong>Frequency</strong>: probabilità di sinistro per veicolo assicurato.',
+    sev:  '<strong>Severity</strong>: costo medio del sinistro liquidato.',
+    inflD:'<strong>Inflazione diretta</strong>: solo diagnostica, segno spesso instabile.',
+    tr:   '<strong>Trend</strong>: componente tendenziale progressiva del premio.',
+    pcs:  '<strong>PostCovidShock</strong>: anni 2021–2023 di normalizzazione post-pandemia.',
+  };
+  div.innerHTML=`
+  <div style="margin-bottom:14px">
+    <div style="font-size:16px;font-weight:600;margin-bottom:4px">${best.n||best.name}</div>
+    <div class="ao-info">Modello selezionato nell'Add-on come migliore per il Premio RC AUTO &mdash; DB "20260506_DB FREQUENCY PREMIO CLEAN_V01"</div>
+  </div>
+  <div class="g2" style="margin-bottom:16px">
+    <div>
+      <div class="sec">Formula</div>
+      <div class="ao-formula">${formulaHtml}</div>
+      <div class="sec" style="margin-top:12px">Variabili &amp; interpretazione</div>
+      <ul style="font-size:12px;color:var(--tx2);padding-left:18px;line-height:1.9">
+        ${m.varKeys.map(k=>`<li>${interp[k]||aoVL(k)}</li>`).join('')}
+      </ul>
+    </div>
+    <div>
+      <div class="sec">Metriche</div>
+      <div class="g2" style="gap:8px;margin-bottom:10px">
+        <div class="ob blu"><div class="v">${m.r2.toFixed(4)}</div><div class="l">R&sup2;</div></div>
+        <div class="ob blu"><div class="v">${m.r2a.toFixed(4)}</div><div class="l">R&sup2; adj</div></div>
+        <div class="ob"><div class="v">${m.rmse.toFixed(1)} &euro;</div><div class="l">RMSE</div></div>
+        <div class="ob"><div class="v">${m.mae.toFixed(1)} &euro;</div><div class="l">MAE</div></div>
+      </div>
+      <div style="font-size:11px;color:var(--tx2);margin-bottom:12px">N osservazioni: <strong>${m.n}</strong></div>
+      <div class="sec">Coefficienti</div>
+      <div class="tw"><table style="font-size:12px;border-collapse:collapse;width:100%">
+        <thead><tr><th style="text-align:left;padding:4px 8px;background:var(--surf2)">Variabile</th><th style="text-align:right;padding:4px 8px;background:var(--surf2)">Coeff.</th><th style="padding:4px 8px;background:var(--surf2)">Segno</th></tr></thead>
+        <tbody>
+          <tr><td style="padding:4px 8px">Intercetta</td><td style="text-align:right;padding:4px 8px">${m.b[0].toFixed(2)}</td><td style="padding:4px 8px">—</td></tr>
+          ${m.varKeys.map((k,i)=>`<tr><td style="padding:4px 8px">${aoVL(k)}</td><td style="text-align:right;padding:4px 8px">${m.b[i+1].toFixed(4)}</td><td style="padding:4px 8px">${m.b[i+1]>=0?'<span style="color:var(--red)">+</span>':'<span style="color:var(--green)">−</span>'}</td></tr>`).join('')}
+        </tbody>
+      </table></div>
+      <div class="sec" style="margin-top:12px">Simulazione Premio 2026</div>
+      ${pred26!==null
+        ?`<div class="og" style="margin-bottom:8px">
+            <div class="ob" style="border-color:#059669"><div class="v" style="color:#059669">${Math.round(pred26).toLocaleString('en-US')} &euro;</div><div class="l">Premio RC AUTO 2026</div></div>
+            ${dPAo!==null?`<div class="ob"><div class="v" style="color:${dPAo>=0?'var(--red)':'var(--green)'}">${dPAo>=0?'+':''}${Math.round(dPAo).toLocaleString('en-US')} &euro;</div><div class="l">&Delta; vs 2025</div></div>`:''}
+          </div>
+          <div style="font-size:11px;color:var(--tx2);line-height:1.65">
+            Sev adj: ${Math.round(sim._sevAdj||sim.sev).toLocaleString('en-US')} &euro; &nbsp;|&nbsp; LossCost: ${(sim.lc||0).toFixed(2)} &euro; &nbsp;|&nbsp; EURIBOR: ${((sim.eur||0)*100).toFixed(2)}%
+          </div>`
+        :'<div class="note w">Impossibile stimare: verifica gli input nell\'Add-on.</div>'
+      }
+    </div>
+  </div>
+  <hr class="dv">
+  <div class="sec">Grafici</div>
+  <div class="g2" style="margin-top:10px">
+    <div class="ch-wrap" style="margin-top:0">
+      <div class="ch-ttl" style="margin-bottom:8px">Premio osservato vs Premio stimato</div>
+      <svg id="mao-chart-fit" width="100%" viewBox="0 0 600 260" style="overflow:visible;display:block"></svg>
+    </div>
+    <div class="ch-wrap" style="margin-top:0">
+      <div class="ch-ttl" style="margin-bottom:8px">Residui (osservato &minus; stimato)</div>
+      <svg id="mao-chart-res" width="100%" viewBox="0 0 600 260" style="overflow:visible;display:block"></svg>
+    </div>
+  </div>
+  <div id="mao-scatter-row" class="g3" style="margin-top:14px"></div>
+  <div class="ao-note" style="margin-top:12px">
+    Per modificare il modello selezionato vai alla pagina
+    <a href="javascript:void(0)" onclick="gotoPage('addon')" style="color:var(--blue)">Add-on Modelli &#8594;</a>
+  </div>`;
+  // Draw charts
+  aoChartFit('mao-chart-fit', m);
+  aoChartRes('mao-chart-res', m);
+  const scatEl=document.getElementById('mao-scatter-row');
+  if(scatEl){
+    const mainVars=m.varKeys.slice(0,3);
+    scatEl.innerHTML=mainVars.map(k=>`
+      <div class="ch-wrap" style="margin-top:0">
+        <div class="ch-ttl" style="margin-bottom:6px">${aoVL(k)} vs Premio (&euro;)</div>
+        <svg id="mao-sc-${k}" width="100%" viewBox="0 0 360 220" style="overflow:visible;display:block"></svg>
+        <div class="ch-note" id="mao-sc-${k}-note"></div>
+      </div>`).join('');
+    mainVars.forEach(k=>aoChartScat(`mao-sc-${k}`,k,m));
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// RESET FUNCTIONS
+// Default values = last known observation from dataset
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function resetA(){
+  document.getElementById('sl-b').value  = 69;    // Brent 2025
+  document.getElementById('sl-px').value = 950;   // PaxKm 2024 (last available)
+  onSl();
+}
+function resetB(){
+  document.getElementById('sl-sv').value  = 4963; // Severity 2025
+  document.getElementById('sl-in').value  = 1.5;  // Inflazione 2026
+  document.getElementById('sl-mf').value  = 4.32; // Frequency 2025
+  document.getElementById('sw-ov').checked = false; // disattiva override manuale
+  onSl();
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ADD-ON — DATASET V01 + VARIABILI DERIVATE
+// Nota: freq, infl, eur memorizzati come decimali.
+// LossCost = freq (decimale) × Severity  →  €/veicolo
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const AO_RAW=[
+  {y:2015,infl:0.001,  freq:0.0539,     sev:4096,    prem:439.1, eur:0.00076 },
+  {y:2016,infl:-0.001, freq:0.0557,     sev:3986,    prem:419.7, eur:-0.00132},
+  {y:2017,infl:0.011,  freq:0.0543,     sev:3975,    prem:416.9, eur:-0.00318},
+  {y:2018,infl:0.011,  freq:0.0526,     sev:4003,    prem:414.8, eur:-0.00329},
+  {y:2019,infl:0.005,  freq:0.052,      sev:4002,    prem:403.5, eur:-0.0031 },
+  {y:2020,infl:-0.003, freq:0.0368,     sev:4415,    prem:379.0, eur:-0.00379},
+  {y:2021,infl:0.019,  freq:0.04350297, sev:4326,    prem:360.1, eur:-0.00546},
+  {y:2022,infl:0.081,  freq:0.0459,     sev:4483,    prem:362.7, eur:-0.0057 },
+  {y:2023,infl:0.057,  freq:0.0448,     sev:4461,    prem:391.0, eur:0.02162 },
+  {y:2024,infl:0.01,   freq:0.04464703, sev:4713,    prem:417.0, eur:0.03905 },
+  {y:2025,infl:0.015,  freq:0.04324925, sev:4962.789,prem:431.8, eur:0.02736 },
+  {y:2026,infl:0.015,  freq:null,       sev:null,    prem:null,  eur:0.02029 },
+];
+const AO_DATA=AO_RAW.map((d,i)=>({
+  ...d,
+  lc:  (d.freq!==null&&d.sev!==null)?d.freq*d.sev:null,
+  lag1:i>0?AO_RAW[i-1].prem:null,
+  tr:  i+1,
+  pcs: [2021,2022,2023].includes(d.y)?1:0,
+}));
+
+// Toggle state — default = Model C (LossCost + Premio_lag1 + EURIBOR)
+const AO={freq:false,sev:false,lc:true,lag1:true,tr:false,pcs:false,eur:true,inflD:false};
+const AO_META=[
+  {k:'freq', l:'Frequency',         diag:false},
+  {k:'sev',  l:'Severity',          diag:false},
+  {k:'lc',   l:'LossCost',          diag:false},
+  {k:'lag1', l:'Premio lag1',       diag:false},
+  {k:'tr',   l:'Trend',             diag:false},
+  {k:'pcs',  l:'PostCovidShock',    diag:false},
+  {k:'eur',  l:'EURIBOR 3M',        diag:false},
+  {k:'inflD',l:'Inflazione (diag)', diag:true },
+];
+const AO_MDEFS=[
+  {id:'A',n:'A — Tecnico puro',              vars:['lc'],                      diag:false},
+  {id:'B',n:'B — Tecnico + inerzia',         vars:['lc','lag1'],               diag:false},
+  {id:'C',n:'C — LossCost + lag1 + EURIBOR', vars:['lc','lag1','eur'],         diag:false, rec:true},
+  {id:'D',n:'D — Freq + Sev + lag1 + EUR',   vars:['freq','sev','lag1','eur'], diag:false},
+  {id:'E',n:'E — Diagnostico inflazione',    vars:['freq','sev','inflD','eur'],diag:true },
+];
+
+// Variable getter
+function aoGV(d,k){
+  switch(k){
+    case 'freq':  return d.freq;
+    case 'sev':   return d.sev;
+    case 'lc':    return d.lc;
+    case 'lag1':  return d.lag1;
+    case 'tr':    return d.tr;
+    case 'pcs':   return d.pcs;
+    case 'eur':   return d.eur;
+    case 'inflD': return d.infl;
+    default:      return null;
+  }
+}
+function aoVL(k){return (AO_META.find(m=>m.k===k)||{l:k}).l;}
+
+// Run OLS for given variable set on historical data (exclude 2026)
+function aoRunM(varKeys){
+  if(!varKeys||!varKeys.length) return null;
+  const hist=AO_DATA.filter(d=>d.prem!==null);
+  const rows=hist.filter(d=>varKeys.every(k=>aoGV(d,k)!==null));
+  if(rows.length<varKeys.length+2) return null;
+  const X=rows.map(d=>varKeys.map(k=>aoGV(d,k)));
+  const y=rows.map(d=>d.prem);
+  const res=ols(X,y);
+  if(!res) return null;
+  return {...res,rows,varKeys};
+}
+
+// Predict from a fitted model + sim inputs
+function aoPredict(mdl,sim){
+  if(!mdl) return null;
+  let bi=1,pred=mdl.b[0];
+  for(const k of mdl.varKeys){
+    const v=sim[k]; if(v===null||v===undefined) return null;
+    pred+=mdl.b[bi]*v; bi++;
+  }
+  return pred;
+}
+
+// Build simulation inputs for 2026
+function aoGetSim(){
+  const freq=+document.getElementById('ao-sl-freq').value;
+  const sev= +document.getElementById('ao-sl-sev').value;
+  const infl=+document.getElementById('ao-sl-infl').value;
+  const eur= +document.getElementById('ao-sl-eur').value;
+  const pcs= +document.getElementById('ao-sl-pcs').value;
+  const sevAdj=sev*(1+infl);
+  const lc=freq*sevAdj;
+  return {freq,sev:sevAdj,lc,lag1:431.8,tr:12,pcs,eur,inflD:infl,
+    _sevRaw:sev,_sevAdj:sevAdj,_infl:infl,_lc:lc,_freq:freq};
+}
+
+// Multicollinearity warning
+function aoMCwarn(varKeys){
+  const w=[];
+  if(varKeys.includes('freq')&&varKeys.includes('sev')&&varKeys.includes('lc'))
+    w.push('LossCost = Frequency &times; Severity. Usarli tutti insieme genera multicollinearità grave e rende instabili i coefficienti.');
+  const rows=AO_DATA.filter(d=>d.prem!==null&&varKeys.every(k=>aoGV(d,k)!==null));
+  if(varKeys.length>0&&rows.length<varKeys.length+3)
+    w.push(`Osservazioni disponibili (${rows.length}) basse rispetto alle variabili (${varKeys.length}). Coefficienti potenzialmente instabili.`);
+  return w;
+}
+
+// ── CHART: Observed vs Fitted ──────────────────
+function aoChartFit(id,model){
+  const svg=clr(id); if(!svg||!model) return;
+  const W=600,H=260,pl=52,pr=16,pt=20,pb=36,iW=W-pl-pr,iH=H-pt-pb;
+  const obs=model.rows.map(d=>d.prem), fit=model.yhat, yrs=model.rows.map(d=>d.y);
+  const allV=[...obs,...fit]; const mn=Math.min(...allV)-10, mx=Math.max(...allV)+10;
+  const n=yrs.length;
+  const px=i=>pl+(i/(n-1))*iW, py=v=>pt+iH-((v-mn)/(mx-mn))*iH;
+  for(let t=0;t<=5;t++){
+    const yv=mn+(mx-mn)*t/5,y=py(yv);
+    svg.appendChild(el('line',{x1:pl,y1:y,x2:pl+iW,y2:y,stroke:'#E2E8F0','stroke-width':'1',...(t>0?{'stroke-dasharray':'4,3'}:{})}));
+    svg.appendChild(txt(yv.toFixed(0),{x:pl-7,y:y+4,'text-anchor':'end','font-size':'9',fill:'#94A3B8'}));
+  }
+  svg.appendChild(el('line',{x1:pl,y1:pt,x2:pl,y2:pt+iH,stroke:'#CBD5E1','stroke-width':'1'}));
+  svg.appendChild(el('line',{x1:pl,y1:pt+iH,x2:pl+iW,y2:pt+iH,stroke:'#CBD5E1','stroke-width':'1'}));
+  yrs.forEach((yr,i)=>{if(i%2!==0&&i!==n-1) return; svg.appendChild(txt(String(yr),{x:px(i),y:pt+iH+15,'text-anchor':'middle','font-size':'9',fill:'#94A3B8'}));});
+  // Lines
+  let dobs='',dfit='';
+  obs.forEach((v,i)=>{dobs+=` ${i===0?'M':'L'}${px(i).toFixed(1)},${py(v).toFixed(1)}`;});
+  fit.forEach((v,i)=>{dfit+=` ${i===0?'M':'L'}${px(i).toFixed(1)},${py(v).toFixed(1)}`;});
+  svg.appendChild(el('path',{d:dobs,fill:'none',stroke:'#1D4ED8','stroke-width':'2.2'}));
+  svg.appendChild(el('path',{d:dfit,fill:'none',stroke:'#059669','stroke-width':'2','stroke-dasharray':'5,3'}));
+  obs.forEach((v,i)=>svg.appendChild(el('circle',{cx:px(i),cy:py(v),r:'4',fill:'#1D4ED8'})));
+  fit.forEach((v,i)=>svg.appendChild(el('circle',{cx:px(i),cy:py(v),r:'3',fill:'#059669'})));
+  svg.appendChild(txt('Premio €',{x:12,y:pt+iH/2,'text-anchor':'middle','font-size':'9',fill:'#94A3B8',transform:`rotate(-90 12 ${pt+iH/2})`}));
+}
+
+// ── CHART: Residuals ───────────────────────────
+function aoChartRes(id,model){
+  const svg=clr(id); if(!svg||!model) return;
+  const W=600,H=260,pl=52,pr=16,pt=20,pb=36,iW=W-pl-pr,iH=H-pt-pb;
+  const res=model.rows.map((d,i)=>d.prem-model.yhat[i]), yrs=model.rows.map(d=>d.y);
+  const n=yrs.length, absMx=Math.max(...res.map(Math.abs),1);
+  const mx=absMx*1.3, mn=-mx;
+  const px=i=>pl+(i/(n-1))*iW, py=v=>pt+iH-((v-mn)/(mx-mn))*iH;
+  // Zero line
+  svg.appendChild(el('line',{x1:pl,y1:py(0),x2:pl+iW,y2:py(0),stroke:'#475569','stroke-width':'1.5','stroke-dasharray':'4,3'}));
+  [-1,0,1].forEach(t=>{
+    const yv=absMx*t,y=py(yv);
+    svg.appendChild(el('line',{x1:pl,y1:y,x2:pl+iW,y2:y,stroke:'#E2E8F0','stroke-width':'1',...(t!==0?{'stroke-dasharray':'4,3'}:{})}));
+    svg.appendChild(txt(yv.toFixed(0),{x:pl-7,y:y+4,'text-anchor':'end','font-size':'9',fill:'#94A3B8'}));
+  });
+  svg.appendChild(el('line',{x1:pl,y1:pt,x2:pl,y2:pt+iH,stroke:'#CBD5E1','stroke-width':'1'}));
+  svg.appendChild(el('line',{x1:pl,y1:pt+iH,x2:pl+iW,y2:pt+iH,stroke:'#CBD5E1','stroke-width':'1'}));
+  yrs.forEach((yr,i)=>{if(i%2!==0&&i!==n-1) return; svg.appendChild(txt(String(yr),{x:px(i),y:pt+iH+15,'text-anchor':'middle','font-size':'9',fill:'#94A3B8'}));});
+  const bw=Math.max(5,iW/(n*2.2));
+  res.forEach((v,i)=>{
+    const x=px(i),y0=py(0),y1=py(v),color=v>=0?'#1D4ED8':'#DC2626';
+    svg.appendChild(el('rect',{x:x-bw/2,y:Math.min(y0,y1),width:bw,height:Math.abs(y1-y0)||1,fill:color,'fill-opacity':'0.7'}));
+  });
+  svg.appendChild(txt('Residui €',{x:12,y:pt+iH/2,'text-anchor':'middle','font-size':'9',fill:'#94A3B8',transform:`rotate(-90 12 ${pt+iH/2})`}));
+}
+
+// ── CHART: Scatter (variable vs Premio) ────────
+function aoChartScat(id,xKey,model){
+  const svg=clr(id); if(!svg||!model) return;
+  const W=360,H=220,pl=54,pr=14,pt=14,pb=38,iW=W-pl-pr,iH=H-pt-pb;
+  const pts=model.rows.filter(d=>aoGV(d,xKey)!==null).map(d=>({x:aoGV(d,xKey),y:d.prem,lbl:String(d.y)}));
+  if(!pts.length){svg.appendChild(txt('Nessun dato',{x:W/2,y:H/2,'text-anchor':'middle','font-size':'11',fill:'#94A3B8'}));return;}
+  const ax=pts.map(p=>p.x),ay=pts.map(p=>p.y);
+  const xp=0.09*(Math.max(...ax)-Math.min(...ax)||1), yp=0.09*(Math.max(...ay)-Math.min(...ay)||1);
+  const xl=Math.min(...ax)-xp,xh=Math.max(...ax)+xp,yl=Math.min(...ay)-yp,yh=Math.max(...ay)+yp;
+  const xr=xh-xl,yr=yh-yl;
+  const pxx=x=>pl+((x-xl)/xr)*iW, pyy=y=>pt+iH-((y-yl)/yr)*iH;
+  [0,0.5,1].forEach(t=>{
+    svg.appendChild(el('line',{x1:pl,y1:pyy(yl+yr*t),x2:pl+iW,y2:pyy(yl+yr*t),stroke:'#E2E8F0','stroke-width':'1','stroke-dasharray':'3,3'}));
+    svg.appendChild(txt((yl+yr*t).toFixed(0),{x:pl-5,y:pyy(yl+yr*t)+3,'text-anchor':'end','font-size':'8',fill:'#94A3B8'}));
+    const xv=(xl+xr*t); const decimals=Math.abs(xv)<1?3:0;
+    svg.appendChild(txt(xv.toFixed(decimals),{x:pxx(xv),y:pt+iH+15,'text-anchor':'middle','font-size':'8',fill:'#94A3B8'}));
+  });
+  svg.appendChild(el('line',{x1:pl,y1:pt,x2:pl,y2:pt+iH,stroke:'#CBD5E1','stroke-width':'1'}));
+  svg.appendChild(el('line',{x1:pl,y1:pt+iH,x2:pl+iW,y2:pt+iH,stroke:'#CBD5E1','stroke-width':'1'}));
+  const fitB=ols(pts.map(p=>[p.x]),pts.map(p=>p.y));
+  if(fitB){const fy=x=>fitB.b[0]+fitB.b[1]*x;
+    svg.appendChild(el('line',{x1:pxx(xl),y1:pyy(fy(xl)),x2:pxx(xh),y2:pyy(fy(xh)),stroke:'#1D4ED8','stroke-width':'1.5','stroke-dasharray':'5,3',opacity:'0.5'}));}
+  pts.forEach(p=>{
+    svg.appendChild(el('circle',{cx:pxx(p.x).toFixed(1),cy:pyy(p.y).toFixed(1),r:'5',fill:'#1D4ED8','fill-opacity':'0.55'}));
+    svg.appendChild(txt(p.lbl,{x:pxx(p.x)+6,y:pyy(p.y)-4,'font-size':'7.5',fill:'#94A3B8'}));
+  });
+  svg.appendChild(txt(aoVL(xKey),{x:pl+iW/2,y:H-4,'text-anchor':'middle','font-size':'9',fill:'#475569'}));
+  svg.appendChild(txt('Premio €',{x:11,y:pt+iH/2,'text-anchor':'middle','font-size':'9',fill:'#475569',transform:`rotate(-90 11 ${pt+iH/2})`}));
+  if(pts.length>1){const r=pcorr(pts.map(p=>p.x),pts.map(p=>p.y));
+    const noteEl=document.getElementById(id+'-note');
+    if(noteEl) noteEl.textContent='r = '+r.toFixed(2);}
+}
+
+// ── GLOBAL STATE ───────────────────────────────
+let aoSelectedModel=null; // {id,name,model,sim}
+let aoApplied=false;
+
+// ── TOGGLE CHIPS ───────────────────────────────
+function aoRenderToggles(){
+  const row=document.getElementById('ao-toggle-row'); if(!row) return;
+  row.innerHTML=AO_META.map(m=>{
+    const on=AO[m.k];
+    return `<button class="vt-chip${on?'':' off'}" onclick="aoToggle('${m.k}')" id="ao-vt-${m.k}">${m.l}${m.diag?' <sup style="font-size:8px">diag</sup>':''}</button>`;
+  }).join('');
+}
+function aoToggle(k){AO[k]=!AO[k]; aoUpdate();}
+
+// ── BEST MODEL DISPLAY ─────────────────────────
+function aoRenderBest(best,sim){
+  const div=document.getElementById('ao-best-display'); if(!div) return;
+  if(!best||!best.model){
+    div.innerHTML='<div class="note w">Nessun modello disponibile. Attiva almeno una variabile.</div>'; return;
+  }
+  const m=best.model, pred26=aoPredict(m,sim);
+  const warns=aoMCwarn(m.varKeys);
+  let formula=`Premio = ${m.b[0].toFixed(2)}`;
+  m.varKeys.forEach((k,i)=>{formula+=` ${m.b[i+1]>=0?' + ':' - '}${Math.abs(m.b[i+1]).toFixed(4)} &times; ${aoVL(k)}`;});
+  const interp={
+    lc:   '<strong>LossCost</strong> = Frequency &times; Severity. Sintetizza il costo tecnico atteso per polizza.',
+    lag1: '<strong>Premio lag1</strong>: inerzia tariffaria. I premi si aggiornano gradualmente anno su anno.',
+    eur:  '<strong>EURIBOR 3M</strong>: proxy del contesto macro-finanziario e dei tassi di interesse.',
+    freq: '<strong>Frequency</strong>: probabilità di sinistro per veicolo assicurato.',
+    sev:  '<strong>Severity</strong>: costo medio del sinistro liquidato.',
+    inflD:'<strong>Inflazione diretta</strong> (solo diagnostica): segno spesso instabile nel campione storico.',
+    tr:   '<strong>Trend</strong>: componente tendenziale progressiva del premio.',
+    pcs:  '<strong>PostCovidShock</strong>: anni 2021–2023 di normalizzazione post-pandemia.',
+  };
+  div.innerHTML=`
+  <div class="model-card best-card">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <strong style="font-size:15px">${best.n}</strong>
+      <span class="ao-badge best">&#9733; Modello migliore</span>
+      ${best.diag?'<span class="ao-badge diag">Solo diagnostico</span>':''}
+    </div>
+    <div class="ao-info" style="margin-bottom:12px">
+      Il modello principale mostrato nella dashboard &egrave; il modello migliore selezionato nella sezione add-on.
+    </div>
+    <div class="g2" style="margin-bottom:14px">
+      <div>
+        <div class="sec">Formula</div>
+        <div class="ao-formula">${formula}</div>
+        <div class="sec" style="margin-top:12px">Variabili &amp; interpretazione</div>
+        <ul style="font-size:12px;color:var(--tx2);padding-left:18px;line-height:1.9">
+          ${m.varKeys.map(k=>`<li>${interp[k]||aoVL(k)}</li>`).join('')}
+        </ul>
+      </div>
+      <div>
+        <div class="sec">Metriche</div>
+        <div class="g2" style="gap:8px;margin-bottom:10px">
+          <div class="ob blu"><div class="v">${m.r2.toFixed(4)}</div><div class="l">R&sup2;</div></div>
+          <div class="ob blu"><div class="v">${m.r2a.toFixed(4)}</div><div class="l">R&sup2; adj</div></div>
+          <div class="ob"><div class="v">${m.rmse.toFixed(1)} &euro;</div><div class="l">RMSE</div></div>
+          <div class="ob"><div class="v">${m.mae.toFixed(1)} &euro;</div><div class="l">MAE</div></div>
+        </div>
+        <div style="font-size:11px;color:var(--tx2);margin-bottom:12px">N osservazioni usate: <strong>${m.n}</strong></div>
+        <div class="sec">Coefficienti</div>
+        <table style="font-size:12px;border-collapse:collapse;width:100%">
+          <thead><tr><th style="text-align:left;padding:4px 8px;background:var(--surf2);font-size:11px">Variabile</th><th style="text-align:right;padding:4px 8px;background:var(--surf2)">Coeff.</th><th style="padding:4px 8px;background:var(--surf2)">Segno</th></tr></thead>
+          <tbody>
+            <tr><td style="padding:4px 8px">Intercetta</td><td style="text-align:right;padding:4px 8px">${m.b[0].toFixed(2)}</td><td style="padding:4px 8px">—</td></tr>
+            ${m.varKeys.map((k,i)=>`<tr><td style="padding:4px 8px">${aoVL(k)}</td><td style="text-align:right;padding:4px 8px">${m.b[i+1].toFixed(4)}</td><td style="padding:4px 8px">${m.b[i+1]>=0?'<span style="color:var(--red)">+</span>':'<span style="color:var(--green)">−</span>'}</td></tr>`).join('')}
+          </tbody>
+        </table>
+        <div class="sec" style="margin-top:12px">Simulazione Premio 2026</div>
+        ${pred26!==null
+          ?`<div class="ob blu" style="margin-bottom:8px"><div class="v">${Math.round(pred26).toLocaleString('en-US')} &euro;</div><div class="l">Premio RC AUTO 2026 stimato</div></div>
+            <div style="font-size:11px;color:var(--tx2);line-height:1.65">
+              Sev base: ${Math.round(sim._sevRaw).toLocaleString('en-US')} &euro;<br>
+              Sev adj: ${Math.round(sim._sevAdj).toLocaleString('en-US')} &euro; (&times; 1 + ${(sim._infl*100).toFixed(1)}%)<br>
+              LossCost: ${sim._lc.toFixed(2)} &euro;/veicolo<br>
+              Freq: ${(sim._freq*100).toFixed(3)}%
+            </div>`
+          :'<div class="note w">Impossibile stimare: input mancanti per le variabili attive.</div>'
+        }
+      </div>
+    </div>
+    ${warns.map(w=>`<div class="ao-warn">${w}</div>`).join('')}
+  </div>`;
+}
+
+// ── APPLY TO MAIN DASHBOARD ────────────────────
+function aoRenderApply(best){
+  const div=document.getElementById('ao-apply-section'); if(!div) return;
+  if(!best||!best.model) return;
+  const applied=aoApplied&&aoSelectedModel&&aoSelectedModel.id===best.id;
+  div.innerHTML=`<hr class="dv">
+  <div class="note n" style="margin-bottom:10px">
+    <strong>Integrazione dashboard principale:</strong> clicca per aggiornare il blocco "Premio RC AUTO" nella Pagina 1
+    con il modello selezionato. La regressione originale rimane come benchmark.
+  </div>
+  <button class="apply-btn${applied?' applied':''}" onclick="aoApplyToMain()">
+    ${applied?'&#10003; '+best.n+' applicato alla dashboard principale':'&#8594; Applica '+best.n+' alla dashboard principale'}
+  </button>`;
+}
+
+function aoApplyToMain(){
+  if(!aoSelectedModel||!aoSelectedModel.model) return;
+  aoApplied=true;
+  onSl(); // refresh main section with banner
+  aoUpdate();
+  gotoPage('sim');
+}
+
+function aoApplyModel(id){
+  const mdef=id==='F'?{id:'F',n:'F — Personalizzato',diag:false}:AO_MDEFS.find(m=>m.id===id);
+  if(!mdef) return;
+  const vars=id==='F'?Object.keys(AO).filter(k=>AO[k]):mdef.vars;
+  const model=aoRunM(vars);
+  if(!model){alert('Modello non disponibile per queste variabili.');return;}
+  aoSelectedModel={id,name:mdef.n,n:mdef.n,model,sim:aoGetSim(),diag:!!mdef.diag,_auto:false};
+  aoApplied=false;
+  aoUpdate();
+}
+
+// ── DATA TABLE ─────────────────────────────────
+function aoRenderDataTable(){
+  const tbl=document.getElementById('ao-data-tbl'); if(!tbl) return;
+  let h=`<thead><tr><th>Anno</th><th>Freq %</th><th>Sev &euro;</th><th>Premio &euro;</th><th>Infl %</th><th>EURIBOR %</th><th>LossCost &euro;</th><th>Premio lag1</th><th>Trend</th><th>PostCovid</th></tr></thead><tbody>`;
+  AO_DATA.filter(d=>d.prem!==null).forEach(d=>{
+    h+=`<tr><td>${d.y}</td><td>${d.freq!==null?(d.freq*100).toFixed(3):' —'}%</td>
+    <td>${d.sev!==null?Math.round(d.sev).toLocaleString('en-US'):' —'} &euro;</td>
+    <td>${d.prem!==null?d.prem.toFixed(1)+' &euro;':'—'}</td>
+    <td>${(d.infl*100).toFixed(2)}%</td>
+    <td>${d.eur!==null?(d.eur*100).toFixed(3)+'%':'—'}</td>
+    <td>${d.lc!==null?d.lc.toFixed(2)+' &euro;':'—'}</td>
+    <td>${d.lag1!==null?d.lag1.toFixed(1)+' &euro;':'—'}</td>
+    <td>${d.tr}</td><td>${d.pcs}</td></tr>`;
+  });
+  tbl.innerHTML=h+'</tbody>';
+}
+
+// ── MAIN ADD-ON UPDATE ─────────────────────────
+function aoUpdate(){
+  const freq=+document.getElementById('ao-sl-freq').value;
+  const sev= +document.getElementById('ao-sl-sev').value;
+  const infl=+document.getElementById('ao-sl-infl').value;
+  const eur= +document.getElementById('ao-sl-eur').value;
+  const pcs= +document.getElementById('ao-sl-pcs').value;
+
+  // Slider labels
+  set('ao-sv-freq',(freq*100).toFixed(3)+'%');
+  set('ao-sv-sev', Math.round(sev).toLocaleString('en-US')+' €');
+  set('ao-sv-infl',(infl*100).toFixed(1)+'%');
+  set('ao-sv-eur', (eur*100).toFixed(2)+'%');
+  set('ao-sv-pcs', pcs===1?'1 (sì)':'0 (no)');
+
+  const sim=aoGetSim();
+
+  // Input warnings
+  const iw=[];
+  if(sim._infl>1)   iw.push('Inflazione &gt; 1. Verifica formato decimale (es. 0.015 per 1.5%).');
+  if(sim._freq>0.3) iw.push('Frequency &gt; 0.3. Verifica formato decimale (es. 0.043 per 4.3%).');
+  const iwEl=document.getElementById('ao-input-warns');
+  if(iwEl) iwEl.innerHTML=iw.map(w=>`<div class="ao-warn">${w}</div>`).join('');
+
+  // Computed inputs display
+  const ciEl=document.getElementById('ao-computed-inputs');
+  if(ciEl) ciEl.innerHTML=`
+    <div class="ob"><div class="v">${(sim._freq*100).toFixed(3)}%</div><div class="l">Frequency 2026</div></div>
+    <div class="ob"><div class="v">${Math.round(sim._sevRaw).toLocaleString('en-US')} &euro;</div><div class="l">Severity base</div></div>
+    <div class="ob blu"><div class="v">${Math.round(sim._sevAdj).toLocaleString('en-US')} &euro;</div><div class="l">Severity adj</div></div>
+    <div class="ob blu"><div class="v">${sim._lc.toFixed(2)} &euro;</div><div class="l">LossCost</div></div>
+    <div class="ob"><div class="v">${(sim.eur*100).toFixed(2)}%</div><div class="l">EURIBOR 3M</div></div>
+    <div class="ob"><div class="v">431.8 &euro;</div><div class="l">Premio lag1 (2025)</div></div>`;
+
+  // Render toggle chips
+  aoRenderToggles();
+
+  // Custom model (F)
+  const customVars=Object.keys(AO).filter(k=>AO[k]);
+  const cwEl=document.getElementById('ao-custom-warn');
+  if(cwEl) cwEl.innerHTML=aoMCwarn(customVars).map(w=>`<div class="ao-warn">${w}</div>`).join('');
+  if(AO.inflD) {
+    const note=document.createElement('div'); note.className='ao-warn';
+    note.innerHTML='Inflazione diretta attiva: solo diagnostica. Per la simulazione tariffaria usa l\'aggiustamento via Severity.';
+    if(cwEl&&!cwEl.querySelector('.inflD-note')) {note.className='ao-warn inflD-note'; cwEl.appendChild(note);}
+  }
+
+  // Run all models
+  const allResults=[...AO_MDEFS.map(mdef=>{
+    const model=aoRunM(mdef.vars);
+    return {...mdef,model,pred26:model?aoPredict(model,sim):null,_vl:mdef.vars.map(k=>aoVL(k)).join(' + ')};
+  })];
+  // Custom model F
+  const customModel=aoRunM(customVars);
+  allResults.push({id:'F',n:'F — Personalizzato',vars:customVars,diag:AO.inflD&&customVars.length===1,
+    model:customModel,pred26:customModel?aoPredict(customModel,sim):null,_vl:customVars.map(k=>aoVL(k)).join(' + ')||'—'});
+
+  // Auto-select best: highest r2a among non-diagnostic with a valid model
+  const rankable=allResults.filter(r=>!r.diag&&r.model);
+  rankable.sort((a,b)=>(b.model.r2a||0)-(a.model.r2a||0));
+  const autoBest=rankable.length?rankable[0]:null;
+
+  // If user manually selected, keep it; else use auto
+  if(!aoSelectedModel||aoSelectedModel._auto!==false) {
+    aoSelectedModel=autoBest?{...autoBest,_auto:true}:null;
+  }
+  // Mark best in table
+  allResults.forEach(r=>{r._best=aoSelectedModel&&r.id===aoSelectedModel.id;});
+
+  // Render comparison table
+  const cardsEl=document.getElementById('ao-model-cards');
+  if(cardsEl){
+    let t=`<div class="tw"><table><thead><tr><th>ID</th><th>Variabili</th><th>R&sup2;</th><th>R&sup2; adj</th><th>RMSE &euro;</th><th>MAE &euro;</th><th>N</th><th>Premio 2026 &euro;</th><th></th></tr></thead><tbody>`;
+    allResults.forEach(r=>{
+      const best=r._best, diag=r.diag;
+      t+=`<tr${best?' style="background:#F0FDF4"':diag?' style="opacity:.75"':''}>
+        <td><strong>${r.id}</strong>${best?' <span class="ao-badge best" style="font-size:9px">best</span>':r.rec?' <span class="ao-badge rec" style="font-size:9px">raccomandato</span>':diag?' <span class="ao-badge diag" style="font-size:9px">diag</span>':''}</td>
+        <td style="font-size:11px">${r._vl}</td>
+        <td>${r.model?r.model.r2.toFixed(4):'—'}</td>
+        <td>${r.model?r.model.r2a.toFixed(4):'—'}</td>
+        <td>${r.model?r.model.rmse.toFixed(1):'—'}</td>
+        <td>${r.model?r.model.mae.toFixed(1):'—'}</td>
+        <td>${r.model?r.model.n:'—'}</td>
+        <td>${r.pred26!==null?Math.round(r.pred26).toLocaleString('en-US'):'—'}</td>
+        <td><button onclick="aoApplyModel('${r.id}')" style="font-size:10px;padding:2px 8px;border-radius:3px;border:1px solid var(--bdr2);background:var(--surf2);cursor:pointer${r._best?';font-weight:700;border-color:var(--green)':''}">Usa</button></td>
+      </tr>`;
+    });
+    cardsEl.innerHTML=t+'</tbody></table></div>';
+  }
+
+  const best=aoSelectedModel&&aoSelectedModel.model?aoSelectedModel:autoBest;
+  aoRenderBest(best, sim);
+  aoRenderApply(best);
+
+  if(best&&best.model){
+    aoChartFit('ao-chart-fit', best.model);
+    aoChartRes('ao-chart-res', best.model);
+    const scatEl=document.getElementById('ao-scatter-row');
+    if(scatEl){
+      const mainVars=best.model.varKeys.slice(0,3);
+      scatEl.innerHTML=mainVars.map(k=>`
+        <div class="ch-wrap" style="margin-top:0">
+          <div class="ch-ttl" style="margin-bottom:6px">${aoVL(k)} vs Premio (&euro;)</div>
+          <svg id="ao-sc-${k}" width="100%" viewBox="0 0 360 220" style="overflow:visible;display:block"></svg>
+          <div class="ch-note" id="ao-sc-${k}-note"></div>
+        </div>`).join('');
+      mainVars.forEach(k=>aoChartScat(`ao-sc-${k}`,k,best.model));
+    }
+  }
+}
+
+function aoInit(){
+  aoRenderDataTable();
+  aoUpdate();
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// INIT
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+computeModels();
+buildExpl();
+onSl();
+aoInit();
+</script>
+</body>
+</html>
